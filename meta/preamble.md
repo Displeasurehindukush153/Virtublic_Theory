@@ -1,6 +1,6 @@
 ---
 page: preambula
-title: The Primary Distinction
+title: The Primary Distinction 1
 subtitle: "The act from which the entire system unfolds"
 eyebrow: "Starting point · Π₀"
 ---
