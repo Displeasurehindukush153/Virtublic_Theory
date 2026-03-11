@@ -1,6 +1,6 @@
 ---
 page: chapter
-title: The Attention Substrate
+title: The Attention Substrate a
 subtitle: "How the capture machine works — at the physics level of the system"
 eyebrow: "Part I · Chapter 1"
 ---
