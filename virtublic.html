@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIRTUBLIC — Interactive System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+<style>
+:root {
+  --bg:        #07080d;
+  --bg-panel:  #0d0f18;
+  --bg-card:   #111420;
+  --bg-hover:  #161a28;
+  --border:    rgba(180,150,60,0.18);
+  --border-hi: rgba(180,150,60,0.5);
+  --gold:      #c8a84a;
+  --gold-dim:  #7a6230;
+  --gold-pale: rgba(200,168,74,0.12);
+  --paper:     #e8e2d4;
+  --muted:     #5a6070;
+  --muted2:    #3a3f50;
+  --red:       #b03a2e;
+  --red-dim:   rgba(176,58,46,0.15);
+  --blue:      #2c4f7c;
+  --blue-dim:  rgba(44,79,124,0.15);
+  --green:     #2a6e4a;
+  --green-dim: rgba(42,110,74,0.15);
+  --sidebar-w: 280px;
+  --topbar-h:  56px;
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body:    Verdana, Arial, Helvetica, sans-serif;
+  --font-mono:    'IBM Plex Mono', Consolas, 'Courier New', monospace;
+  --ease:      cubic-bezier(0.4,0,0.2,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--paper);font-family:var(--font-body);font-size:15px;line-height:1.75;overflow-x:hidden;min-height:100vh}
+a{color:var(--gold);text-decoration:none;cursor:pointer}
+a:hover{color:var(--paper)}
+button{cursor:pointer;border:none;background:none;color:inherit;font:inherit}
+input,textarea{font:inherit}
+ul{list-style:none}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--muted2);border-radius:2px}
+#app{display:flex;flex-direction:column;min-height:100vh}
+
+/* TOPBAR */
+#topbar{position:fixed;top:0;left:0;right:0;height:var(--topbar-h);background:rgba(7,8,13,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 1.5rem;gap:1.5rem;z-index:200}
+.topbar-logo{font-family:var(--font-mono);font-weight:600;font-size:0.9rem;letter-spacing:0.2em;color:var(--gold);white-space:nowrap;cursor:pointer;transition:opacity 0.2s}
+.topbar-logo:hover{opacity:0.75}
+.topbar-sep{width:1px;height:20px;background:var(--border)}
+#breadcrumb{display:flex;align-items:center;gap:0.5rem;font-family:var(--font-mono);font-size:0.62rem;letter-spacing:0.08em;color:var(--muted);flex:1;overflow:hidden}
+.bc-item{color:var(--muted);white-space:nowrap;cursor:pointer;transition:color 0.2s}
+.bc-item:hover{color:var(--paper)}
+.bc-item.active{color:var(--gold)}
+.bc-arrow{color:var(--muted2)}
+.topbar-right{display:flex;align-items:center;gap:1rem;margin-left:auto}
+#menu-toggle{display:none;width:32px;height:32px;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:4px;color:var(--muted);font-size:1.1rem;transition:all 0.2s}
+#menu-toggle:hover{border-color:var(--gold);color:var(--gold)}
+.progress-ring{width:32px;height:32px;position:relative;cursor:default}
+.progress-ring svg{transform:rotate(-90deg)}
+.progress-ring circle{fill:none;stroke:var(--muted2);stroke-width:2}
+.progress-ring .arc{stroke:var(--gold);stroke-linecap:round;stroke-dasharray:0 100;transition:stroke-dasharray 0.5s var(--ease)}
+.progress-ring span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:0.52rem;color:var(--gold)}
+.topbar-btn{display:flex;align-items:center;padding:0.35rem 0.8rem;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;white-space:nowrap;text-decoration:none;border-radius:2px}
+.topbar-btn:hover{border-color:var(--gold);color:var(--gold);background:var(--gold-pale)}
+.topbar-btn.accent{border-color:var(--gold-dim);color:var(--gold)}
+
+/* SIDEBAR */
+#sidebar{position:fixed;top:var(--topbar-h);left:0;width:var(--sidebar-w);height:calc(100vh - var(--topbar-h));background:var(--bg-panel);border-right:1px solid var(--border);overflow-y:auto;overflow-x:hidden;z-index:100;transition:transform 0.3s var(--ease);display:flex;flex-direction:column}
+.sidebar-section{padding:1.25rem 0 0.5rem}
+.sidebar-heading{font-family:var(--font-mono);font-size:0.58rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--gold-dim);padding:0 1.25rem 0.6rem;border-bottom:1px solid var(--border);margin-bottom:0.5rem}
+.nav-item{display:flex;align-items:flex-start;gap:0.6rem;padding:0.5rem 1.25rem;cursor:pointer;transition:background 0.15s,color 0.15s;border-left:2px solid transparent;font-size:0.82rem;line-height:1.4;color:var(--muted)}
+.nav-item:hover{background:var(--gold-pale);color:var(--paper);border-left-color:var(--gold-dim)}
+.nav-item.active{background:var(--gold-pale);color:var(--gold);border-left-color:var(--gold)}
+.nav-item .nav-badge{font-family:var(--font-mono);font-size:0.58rem;letter-spacing:0.05em;background:var(--muted2);color:var(--muted);padding:0.1em 0.4em;border-radius:2px;white-space:nowrap;flex-shrink:0;margin-top:0.1em}
+.nav-item.active .nav-badge{background:var(--gold-dim);color:var(--gold)}
+.nav-sub{padding-left:2rem}
+.nav-sub .nav-item{font-size:0.76rem;padding:0.35rem 1.25rem 0.35rem 0}
+.nav-expand-btn{width:100%;display:flex;align-items:center;justify-content:space-between;padding:0.5rem 1.25rem;cursor:pointer;color:var(--muted);font-size:0.82rem;font-family:var(--font-mono);letter-spacing:0.05em;transition:color 0.2s}
+.nav-expand-btn:hover{color:var(--paper)}
+.nav-expand-btn.open{color:var(--gold)}
+.nav-expand-btn .arrow{transition:transform 0.2s;font-size:0.7rem}
+.nav-expand-btn.open .arrow{transform:rotate(90deg)}
+.nav-group{overflow:hidden;max-height:0;transition:max-height 0.35s var(--ease)}
+.nav-group.open{max-height:800px}
+
+/* GITHUB PANEL — bottom of sidebar only */
+.gh-panel{margin-top:auto;border-top:1px solid var(--border);padding:1rem 1.25rem;background:var(--bg-panel)}
+.gh-panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;cursor:pointer}
+.gh-panel-title{font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold-dim);display:flex;align-items:center;gap:0.5rem}
+.gh-dot{width:6px;height:6px;border-radius:50%;background:var(--muted2);transition:background 0.3s;flex-shrink:0}
+.gh-dot.connecting{background:var(--gold);animation:ghpulse 1s infinite}
+.gh-dot.connected{background:#4caf6e}
+.gh-dot.error{background:var(--red)}
+@keyframes ghpulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.gh-panel-toggle{font-size:0.65rem;color:var(--muted2);transition:color 0.2s}
+.gh-panel-header:hover .gh-panel-toggle{color:var(--muted)}
+.gh-panel-body{overflow:hidden;max-height:0;transition:max-height 0.3s var(--ease)}
+.gh-panel-body.open{max-height:280px}
+.gh-input-group{margin-bottom:0.6rem}
+.gh-input-label{font-family:var(--font-mono);font-size:0.55rem;letter-spacing:0.1em;color:var(--muted);display:block;margin-bottom:0.3rem}
+.gh-input{width:100%;background:var(--bg-card);border:1px solid var(--border);color:var(--paper);padding:0.45rem 0.7rem;font-family:var(--font-mono);font-size:0.72rem;outline:none;transition:border-color 0.2s;border-radius:2px}
+.gh-input:focus{border-color:var(--gold-dim)}
+.gh-input::placeholder{color:var(--muted2)}
+.gh-btn-row{display:flex;gap:0.5rem;margin-top:0.75rem}
+.gh-btn{flex:1;padding:0.45rem 0.5rem;border:1px solid var(--border);background:var(--bg-card);color:var(--muted);font-family:var(--font-mono);font-size:0.62rem;letter-spacing:0.08em;cursor:pointer;transition:all 0.2s;border-radius:2px;text-align:center}
+.gh-btn:hover{border-color:var(--gold);color:var(--gold);background:var(--gold-pale)}
+.gh-btn.primary{border-color:var(--gold-dim);color:var(--gold);background:var(--gold-pale)}
+.gh-btn.primary:hover{border-color:var(--gold);background:rgba(200,168,74,0.2)}
+.gh-btn.danger{border-color:var(--red);color:#e07060;background:var(--red-dim)}
+.gh-status-text{font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.06em;padding:0.4rem 0;display:flex;align-items:center;gap:0.5rem;min-height:1.5rem;color:var(--muted)}
+.gh-status-text.ok{color:#4caf6e}
+.gh-status-text.err{color:#e07060}
+.gh-repo-display{font-family:var(--font-mono);font-size:0.62rem;color:var(--gold);padding:0.3rem 0;word-break:break-all}
+.gh-cache-info{font-family:var(--font-mono);font-size:0.55rem;color:var(--muted2);margin-top:0.3rem}
+
+/* MAIN */
+#main{margin-left:var(--sidebar-w);margin-top:var(--topbar-h);min-height:calc(100vh - var(--topbar-h));transition:margin-left 0.3s var(--ease)}
+#view{padding:3rem 3.5rem 6rem;max-width:900px;animation:viewIn 0.3s var(--ease)}
+@keyframes viewIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* LOADING */
+.loading-state{display:flex;flex-direction:column;align-items:flex-start;gap:1rem;padding:3rem 0}
+.loading-bar{height:2px;background:var(--border);width:280px;position:relative;overflow:hidden;border-radius:1px}
+.loading-bar::after{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;background:var(--gold);animation:loadSlide 1.2s ease-in-out infinite}
+@keyframes loadSlide{0%{left:-60%}100%{left:100%}}
+.loading-label{font-family:var(--font-mono);font-size:0.62rem;letter-spacing:0.15em;color:var(--muted)}
+
+/* GITHUB RENDERED MARKDOWN */
+.gh-content h1{font-family:var(--font-display);font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:900;line-height:1.1;color:var(--paper);margin-bottom:1rem}
+.gh-content h2{font-family:var(--font-display);font-size:1.6rem;font-weight:700;color:var(--paper);margin:2rem 0 0.8rem;padding-top:1rem;border-top:1px solid var(--border)}
+.gh-content h3{font-family:var(--font-display);font-size:1.2rem;font-style:italic;color:var(--gold);margin:1.5rem 0 0.5rem}
+.gh-content h4{font-family:var(--font-mono);font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold-dim);margin:1.2rem 0 0.4rem}
+.gh-content p{font-size:0.95rem;line-height:1.75;color:rgba(232,226,212,0.82);margin-bottom:1rem}
+.gh-content strong{color:var(--paper);font-weight:600}
+.gh-content em{color:var(--gold);font-style:italic}
+.gh-content ul,.gh-content ol{margin:0.8rem 0 0.8rem 1.5rem;color:var(--muted);font-size:0.9rem;line-height:1.65}
+.gh-content li{margin-bottom:0.3rem}
+.gh-content code{font-family:var(--font-mono);font-size:0.8em;background:var(--bg-card);color:var(--gold);padding:0.15em 0.4em;border-radius:2px;border:1px solid var(--border)}
+.gh-content pre{background:var(--bg-card);border:1px solid var(--border);padding:1.2rem 1.5rem;margin:1.2rem 0;overflow-x:auto;border-radius:2px}
+.gh-content pre code{background:none;border:none;padding:0;color:var(--paper);font-size:0.82rem;line-height:1.6}
+.gh-content blockquote{border-left:3px solid var(--gold);padding:0.8rem 1.2rem;margin:1.2rem 0;background:var(--gold-pale);font-style:italic;color:rgba(232,226,212,0.75)}
+.gh-content table{width:100%;border-collapse:collapse;margin:1.2rem 0;font-size:0.85rem}
+.gh-content th{font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold-dim);border-bottom:2px solid var(--border);padding:0.6rem 0.8rem;text-align:left;font-weight:400}
+.gh-content td{padding:0.7rem 0.8rem;border-bottom:1px solid var(--border);color:var(--muted);vertical-align:top;line-height:1.4}
+.gh-content hr{border:none;border-top:1px solid var(--border);margin:2rem 0}
+.gh-content a{color:var(--gold)}
+.gh-content a:hover{color:var(--paper)}
+.gh-formula{border:1px solid var(--border);background:var(--bg-card);padding:1.2rem 1.5rem;margin:1.2rem 0;font-family:var(--font-mono);font-size:0.78rem;line-height:1.9;color:var(--muted);position:relative}
+.gh-formula::before{content:'FORMULA';position:absolute;top:-0.6em;left:1rem;background:var(--bg);padding:0 0.4rem;font-size:0.52rem;letter-spacing:0.2em;color:var(--gold-dim)}
+.gh-callout{padding:1rem 1.25rem;margin:1.2rem 0;border-left:3px solid var(--gold);background:var(--gold-pale);font-size:0.9rem;line-height:1.6;color:var(--paper)}
+
+/* TYPOGRAPHY */
+.page-eyebrow{font-family:var(--font-mono);font-size:0.62rem;letter-spacing:0.3em;color:var(--gold);text-transform:uppercase;margin-bottom:1rem}
+.page-title{font-family:var(--font-display);font-size:clamp(2.2rem,4vw,3.2rem);font-weight:900;line-height:1.05;color:var(--paper);margin-bottom:0.6rem}
+.page-subtitle{font-family:var(--font-display);font-style:italic;font-size:1.15rem;color:var(--gold);font-weight:300;margin-bottom:2rem}
+.page-lead{font-size:1.1rem;color:rgba(232,226,212,0.75);font-weight:300;max-width:640px;margin-bottom:2.5rem;line-height:1.75}
+.divider{height:1px;background:var(--border);margin:2.5rem 0}
+.section-label{font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--gold-dim);margin-bottom:0.8rem}
+
+/* COMPONENTS */
+.tag{display:inline-block;font-family:var(--font-mono);font-size:0.58rem;letter-spacing:0.12em;padding:0.2em 0.6em;border-radius:2px;border:1px solid;margin-right:0.4rem;vertical-align:middle}
+.tag-axiom{border-color:var(--blue);color:#6a9fd8;background:var(--blue-dim)}
+.tag-theorem{border-color:var(--gold-dim);color:var(--gold);background:var(--gold-pale)}
+.tag-principle{border-color:var(--green);color:#5aaf7a;background:var(--green-dim)}
+.tag-crisis{border-color:var(--red);color:#e07060;background:var(--red-dim)}
+.tag-law{border-color:var(--muted2);color:var(--muted);background:rgba(90,96,112,0.1)}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);margin:2rem 0}
+.card{background:var(--bg-card);padding:1.5rem;cursor:pointer;transition:background 0.2s,transform 0.2s;position:relative}
+.card:hover{background:var(--bg-hover);transform:translateY(-1px)}
+.card-id{font-family:var(--font-mono);font-size:0.58rem;letter-spacing:0.15em;color:var(--gold-dim);margin-bottom:0.5rem}
+.card h4{font-family:var(--font-display);font-size:1rem;font-weight:700;color:var(--paper);margin-bottom:0.5rem;line-height:1.3}
+.card p{font-size:0.83rem;color:var(--muted);line-height:1.5}
+.card .card-arrow{position:absolute;bottom:1rem;right:1.2rem;font-size:0.7rem;color:var(--gold-dim);transition:color 0.2s,right 0.2s}
+.card:hover .card-arrow{color:var(--gold);right:1rem}
+.expand-block{border:1px solid var(--border);margin-bottom:1px;transition:border-color 0.2s}
+.expand-block.open{border-color:var(--border-hi)}
+.expand-header{display:flex;align-items:flex-start;justify-content:space-between;padding:1.2rem 1.5rem;cursor:pointer;gap:1rem}
+.expand-header:hover .expand-title{color:var(--gold)}
+.expand-left{flex:1}
+.expand-id{font-family:var(--font-mono);font-size:0.58rem;letter-spacing:0.15em;color:var(--gold-dim);margin-bottom:0.3rem}
+.expand-title{font-family:var(--font-display);font-size:1.05rem;font-weight:700;color:var(--paper);line-height:1.3;transition:color 0.2s}
+.expand-teaser{font-size:0.83rem;color:var(--muted);margin-top:0.3rem;line-height:1.4}
+.expand-toggle{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:50%;color:var(--muted);font-size:0.75rem;flex-shrink:0;transition:all 0.2s;margin-top:0.1rem}
+.expand-block.open .expand-toggle{border-color:var(--gold);color:var(--gold);transform:rotate(45deg)}
+.expand-body{max-height:0;overflow:hidden;transition:max-height 0.4s var(--ease)}
+.expand-block.open .expand-body{max-height:1200px}
+.expand-content{padding:0 1.5rem 1.5rem;border-top:1px solid var(--border)}
+.split-2{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);margin:2rem 0}
+.split-cell{padding:2rem;background:var(--bg-card)}
+.split-cell .split-label{font-family:var(--font-mono);font-size:0.58rem;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:0.8rem}
+.split-cell h3{font-family:var(--font-display);font-size:1.4rem;font-style:italic;margin-bottom:0.6rem}
+.split-cell p{font-size:0.88rem;color:var(--muted);line-height:1.6}
+.split-cell.danger .split-label{color:var(--red)}
+.split-cell.danger h3{color:#e07060}
+.split-cell.safe .split-label{color:var(--gold)}
+.split-cell.safe h3{color:var(--gold)}
+.formula-box{border:1px solid var(--border);background:var(--bg-card);padding:1.5rem 2rem;margin:1.5rem 0;font-family:var(--font-mono);font-size:0.78rem;line-height:2;color:var(--muted)}
+.formula-box .f-key{color:var(--gold)}
+.formula-box .f-val{color:var(--paper)}
+.formula-box .f-dim{color:var(--muted2)}
+.formula-box .f-comment{color:var(--green)}
+.callout{padding:1.25rem 1.5rem;margin:1.5rem 0;border-left:3px solid;font-size:0.92rem;line-height:1.6}
+.callout-gold{border-color:var(--gold);background:var(--gold-pale);color:var(--paper)}
+.callout-red{border-color:var(--red);background:var(--red-dim);color:var(--paper)}
+.callout-blue{border-color:var(--blue);background:var(--blue-dim);color:var(--paper)}
+.callout-green{border-color:var(--green);background:var(--green-dim);color:var(--paper)}
+.callout .callout-label{font-family:var(--font-mono);font-size:0.58rem;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:0.4rem}
+.callout-gold .callout-label{color:var(--gold)}
+.callout-red .callout-label{color:#e07060}
+.callout-blue .callout-label{color:#6a9fd8}
+.callout-green .callout-label{color:#5aaf7a}
+.matrix{width:100%;border-collapse:collapse;font-size:0.83rem;margin:1.5rem 0}
+.matrix th{font-family:var(--font-mono);font-size:0.58rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold-dim);border-bottom:2px solid var(--border);padding:0.7rem 1rem;text-align:left;font-weight:400}
+.matrix td{padding:0.8rem 1rem;border-bottom:1px solid var(--border);color:var(--muted);vertical-align:top;line-height:1.5}
+.matrix tr:hover td{background:var(--gold-pale);color:var(--paper)}
+.matrix .link-cell{color:var(--gold);cursor:pointer;font-family:var(--font-mono);font-size:0.7rem;letter-spacing:0.05em}
+.matrix .link-cell:hover{color:var(--paper)}
+.path-nav{display:flex;align-items:center;gap:0;margin:2.5rem 0;overflow-x:auto;padding-bottom:0.5rem}
+.path-step{display:flex;align-items:center;flex-shrink:0}
+.path-node{display:flex;align-items:center;gap:0.5rem;padding:0.5rem 1rem;border:1px solid var(--border);background:var(--bg-card);font-family:var(--font-mono);font-size:0.68rem;letter-spacing:0.06em;cursor:pointer;transition:all 0.2s;white-space:nowrap;color:var(--muted)}
+.path-node:hover{border-color:var(--gold);color:var(--gold);background:var(--gold-pale)}
+.path-node.active{border-color:var(--gold);color:var(--gold);background:var(--gold-pale)}
+.path-node.done{border-color:var(--green);color:#5aaf7a;background:var(--green-dim)}
+.path-arrow{color:var(--muted2);font-size:0.8rem;padding:0 0.3rem;flex-shrink:0}
+.page-nav{display:flex;justify-content:space-between;align-items:center;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border)}
+.nav-btn{display:flex;align-items:center;gap:0.8rem;padding:0.8rem 1.2rem;border:1px solid var(--border);background:var(--bg-card);color:var(--muted);font-size:0.82rem;transition:all 0.2s;cursor:pointer}
+.nav-btn:hover{border-color:var(--gold);color:var(--gold);background:var(--gold-pale)}
+.nav-btn .nav-dir{font-family:var(--font-mono);font-size:0.58rem;letter-spacing:0.15em;text-transform:uppercase;display:block;margin-bottom:0.1rem}
+.nav-btn .nav-title{font-family:var(--font-display);font-size:0.9rem;font-weight:700}
+.nav-btn-prev .nav-dir{text-align:right}
+.nav-btn-prev{flex-direction:row-reverse}
+.dash-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);margin:2rem 0}
+.dash-part{background:var(--bg-card);padding:2rem 1.5rem;cursor:pointer;transition:background 0.2s;position:relative;overflow:hidden}
+.dash-part:hover{background:var(--bg-hover)}
+.dash-part::before{content:attr(data-num);position:absolute;top:-1rem;right:0.5rem;font-family:var(--font-display);font-size:6rem;font-weight:900;color:transparent;-webkit-text-stroke:1px rgba(88,166,255,0.1);line-height:1;user-select:none}
+.dash-part .dp-label{font-family:var(--font-mono);font-size:0.58rem;letter-spacing:0.2em;color:var(--gold-dim);margin-bottom:0.5rem;text-transform:uppercase}
+.dash-part h3{font-family:var(--font-display);font-size:1.1rem;font-weight:700;color:var(--paper);margin-bottom:0.5rem;line-height:1.3}
+.dash-part p{font-size:0.8rem;color:var(--muted);line-height:1.5}
+.dash-part .dp-chapters{margin-top:1rem;display:flex;gap:0.4rem;flex-wrap:wrap}
+.dp-chip{font-family:var(--font-mono);font-size:0.58rem;letter-spacing:0.06em;padding:0.2em 0.5em;border:1px solid var(--border);color:var(--muted2);border-radius:2px;cursor:pointer;transition:all 0.15s}
+.dp-chip:hover{border-color:var(--gold);color:var(--gold)}
+.detail-hero{padding:2.5rem;border:1px solid var(--border);background:var(--bg-card);margin-bottom:2rem;position:relative;overflow:hidden}
+.detail-hero::after{content:'';position:absolute;top:0;right:0;width:200px;height:100%;background:linear-gradient(to left,rgba(200,168,74,0.04),transparent);pointer-events:none}
+.detail-meta{display:flex;align-items:center;gap:0.8rem;margin-bottom:1.2rem;flex-wrap:wrap}
+.detail-title{font-family:var(--font-display);font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:900;line-height:1.1;color:var(--paper);margin-bottom:0.5rem}
+.detail-subtitle{font-family:var(--font-display);font-style:italic;font-size:1.1rem;color:var(--gold);font-weight:300;margin-bottom:1.2rem}
+.detail-abstract{font-size:1rem;color:rgba(232,226,212,0.7);max-width:620px;line-height:1.7}
+.related-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:0.75rem;margin:1.5rem 0}
+.related-item{padding:1rem;border:1px solid var(--border);background:var(--bg-card);cursor:pointer;transition:all 0.2s}
+.related-item:hover{border-color:var(--gold);background:var(--gold-pale)}
+.related-item .ri-id{font-family:var(--font-mono);font-size:0.58rem;letter-spacing:0.12em;color:var(--gold-dim);margin-bottom:0.3rem}
+.related-item .ri-title{font-family:var(--font-display);font-size:0.88rem;font-weight:700;color:var(--paper);line-height:1.3}
+.principles-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);margin:2rem 0}
+.p-item{background:var(--bg-card);padding:1.5rem;cursor:pointer;transition:background 0.2s;position:relative}
+.p-item:hover{background:var(--bg-hover)}
+.p-item.core{border-top:2px solid var(--gold)}
+.p-item.emergency{border-top:2px solid var(--red)}
+.p-item.governance{border-top:2px solid #2c4f7c}
+.p-item .p-id{font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.15em;color:var(--gold-dim);margin-bottom:0.4rem}
+.p-item h4{font-family:var(--font-display);font-size:0.95rem;font-weight:700;color:var(--paper);margin-bottom:0.4rem;line-height:1.3;font-style:italic}
+.p-item p{font-size:0.77rem;color:var(--muted);line-height:1.4}
+.crisis-block{border:1px solid var(--red);padding:1.5rem;margin:2rem 0;position:relative}
+.crisis-block::before{content:'CRISIS · TRANSITION';position:absolute;top:-0.65em;left:1rem;background:var(--bg);padding:0 0.5rem;font-family:var(--font-mono);font-size:0.58rem;letter-spacing:0.2em;color:var(--red)}
+.crisis-block p{font-size:0.92rem;line-height:1.65;color:rgba(232,226,212,0.8)}
+
+/* GH hero (used when rendering from GitHub) */
+.gh-hero{padding:2rem 2.5rem;border:1px solid var(--border);background:var(--bg-card);margin-bottom:2rem}
+.gh-hero-meta{display:flex;gap:0.6rem;flex-wrap:wrap;margin-bottom:1rem}
+.gh-hero-title{font-family:var(--font-display);font-size:clamp(1.8rem,3.5vw,2.6rem);font-weight:900;line-height:1.1;color:var(--paper);margin-bottom:0.4rem}
+.gh-hero-subtitle{font-family:var(--font-display);font-style:italic;font-size:1.05rem;color:var(--gold);font-weight:300;margin-bottom:0.8rem}
+
+@media(max-width:900px){:root{--sidebar-w:260px}#view{padding:2rem 2rem 5rem}.dash-grid{grid-template-columns:1fr}.split-2{grid-template-columns:1fr}}
+@media(max-width:680px){:root{--sidebar-w:100%}#sidebar{transform:translateX(-100%)}#sidebar.open{transform:translateX(0)}#main{margin-left:0}#menu-toggle{display:flex}#view{padding:1.5rem 1.25rem 4rem}.dash-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="app">
+
+<header id="topbar">
+  <div class="topbar-logo" onclick="navigate('home')">VIRTUBLIC</div>
+  <div class="topbar-sep"></div>
+  <nav id="breadcrumb"></nav>
+  <div class="topbar-right">
+    <a class="topbar-btn" href="https://www.virtublic.one" target="_blank" rel="noopener">Virtublican Party</a>
+    <a class="topbar-btn accent" href="https://github.com/Virtublican/Virtublic_Theory" target="_blank" rel="noopener">GitHub Repo</a>
+    <div class="progress-ring" title="Reading progress">
+      <svg width="32" height="32" viewBox="0 0 36 36">
+        <circle cx="18" cy="18" r="15.9"/>
+        <circle class="arc" id="progress-arc" cx="18" cy="18" r="15.9" stroke-dasharray="0 100" pathLength="100"/>
+      </svg>
+      <span id="progress-pct">0%</span>
+    </div>
+    <button id="menu-toggle" onclick="toggleSidebar()">☰</button>
+  </div>
+</header>
+
+<aside id="sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-heading">Navigation</div>
+    <div class="nav-item" onclick="navigate('home')"><span class="nav-badge">⌂</span> Home · System</div>
+    <div class="nav-item" onclick="navigate('preambule')"><span class="nav-badge">Π₀</span> Preamble</div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-heading">Part I — Digital Capital</div>
+    <div class="nav-expand-btn" onclick="toggleGroup('g1')" id="btn-g1"><span>Chapters I</span><span class="arrow">›</span></div>
+    <div class="nav-group" id="g1">
+      <div class="nav-sub">
+        <div class="nav-item" onclick="navigate('ch1')"><span class="nav-badge">Ch.1</span> Attention Substrate</div>
+        <div class="nav-item" onclick="navigate('ch2')"><span class="nav-badge">Ch.2</span> Platform Anthropology</div>
+        <div class="nav-item" onclick="navigate('ch3')"><span class="nav-badge">Ch.3</span> Algorithmic Dominion</div>
+      </div>
+    </div>
+    <div class="nav-expand-btn" onclick="toggleGroup('g1t')" id="btn-g1t"><span>Theorems I</span><span class="arrow">›</span></div>
+    <div class="nav-group" id="g1t">
+      <div class="nav-sub">
+        <div class="nav-item" onclick="navigate('T1')"><span class="nav-badge">T1</span> Surplus Attention</div>
+        <div class="nav-item" onclick="navigate('T2')"><span class="nav-badge">T2</span> Temporal Barrier</div>
+        <div class="nav-item" onclick="navigate('T3')"><span class="nav-badge">T3</span> No Correction</div>
+        <div class="nav-item" onclick="navigate('T4')"><span class="nav-badge">T4</span> Responsibility Without Power</div>
+        <div class="nav-item" onclick="navigate('T5')"><span class="nav-badge">T5</span> Neutralization of Resistance</div>
+        <div class="nav-item" onclick="navigate('T6')"><span class="nav-badge">T6</span> Cognitive Disarmament</div>
+        <div class="nav-item" onclick="navigate('T7')"><span class="nav-badge">T7</span> Necessity of Form</div>
+        <div class="nav-item" onclick="navigate('T8')"><span class="nav-badge">T8</span> Sovereignty Rupture</div>
+        <div class="nav-item" onclick="navigate('T9')"><span class="nav-badge">T9</span> System Collapse</div>
+        <div class="nav-item" onclick="navigate('T10')"><span class="nav-badge">T10</span> Constitutional Necessity</div>
+      </div>
+    </div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-heading">Part II — Blockchain</div>
+    <div class="nav-expand-btn" onclick="toggleGroup('g2')" id="btn-g2"><span>Chapters II</span><span class="arrow">›</span></div>
+    <div class="nav-group" id="g2">
+      <div class="nav-sub">
+        <div class="nav-item" onclick="navigate('ch4')"><span class="nav-badge">Ch.4</span> Blockchain Ontology</div>
+        <div class="nav-item" onclick="navigate('ch5')"><span class="nav-badge">Ch.5</span> Blockchain Anthropology</div>
+        <div class="nav-item" onclick="navigate('ch6')"><span class="nav-badge">Ch.6</span> Blockchain + Constitution</div>
+      </div>
+    </div>
+    <div class="nav-expand-btn" onclick="toggleGroup('g2t')" id="btn-g2t"><span>Theorems II</span><span class="arrow">›</span></div>
+    <div class="nav-group" id="g2t">
+      <div class="nav-sub">
+        <div class="nav-item" onclick="navigate('T11')"><span class="nav-badge">T11</span> PoS Plutocracy</div>
+        <div class="nav-item" onclick="navigate('T12')"><span class="nav-badge">T12</span> DAO Legitimacy</div>
+        <div class="nav-item" onclick="navigate('T13')"><span class="nav-badge">T13</span> Fork Legitimacy Paradox</div>
+        <div class="nav-item" onclick="navigate('T14')"><span class="nav-badge">T14</span> Code is Law ∧ ¬NA0</div>
+        <div class="nav-item" onclick="navigate('T15')"><span class="nav-badge">T15</span> Sybil Trilemma</div>
+        <div class="nav-item" onclick="navigate('T16')"><span class="nav-badge">T16</span> Absorption of Critique</div>
+        <div class="nav-item" onclick="navigate('T17')"><span class="nav-badge">T17</span> Virtublic = Tech + Constitution</div>
+      </div>
+    </div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-heading">Part III — Constitution</div>
+    <div class="nav-expand-btn" onclick="toggleGroup('g3')" id="btn-g3"><span>Chapters III</span><span class="arrow">›</span></div>
+    <div class="nav-group" id="g3">
+      <div class="nav-sub">
+        <div class="nav-item" onclick="navigate('ch7')"><span class="nav-badge">Ch.7</span> Core P0–P7</div>
+        <div class="nav-item" onclick="navigate('ch8')"><span class="nav-badge">Ch.8</span> Emergency Procedures P8–P9</div>
+        <div class="nav-item" onclick="navigate('ch9')"><span class="nav-badge">Ch.9</span> Governance P10–P18</div>
+      </div>
+    </div>
+    <div class="nav-expand-btn" onclick="toggleGroup('g3p')" id="btn-g3p"><span>Principles P0–P18</span><span class="arrow">›</span></div>
+    <div class="nav-group" id="g3p">
+      <div class="nav-sub">
+        <div class="nav-item" onclick="navigate('P0')"><span class="nav-badge">P0</span> Popular Sovereignty</div>
+        <div class="nav-item" onclick="navigate('P1')"><span class="nav-badge">P1</span> 1 citizen — 1 vote</div>
+        <div class="nav-item" onclick="navigate('P2')"><span class="nav-badge">P2</span> Code Supremacy</div>
+        <div class="nav-item" onclick="navigate('P3')"><span class="nav-badge">P3</span> Soulbound Identity</div>
+        <div class="nav-item" onclick="navigate('P4')"><span class="nav-badge">P4</span> Dual Sovereignty</div>
+        <div class="nav-item" onclick="navigate('P5')"><span class="nav-badge">P5</span> Open Source</div>
+        <div class="nav-item" onclick="navigate('P6')"><span class="nav-badge">P6</span> Right to Exit</div>
+        <div class="nav-item" onclick="navigate('P7')"><span class="nav-badge">P7</span> Core Inviolability</div>
+        <div class="nav-item" onclick="navigate('P8')"><span class="nav-badge">P8</span> Axiom-Break</div>
+        <div class="nav-item" onclick="navigate('P9')"><span class="nav-badge">P9</span> Convention</div>
+        <div class="nav-item" onclick="navigate('P10')"><span class="nav-badge">P10</span> Madison Mode</div>
+        <div class="nav-item" onclick="navigate('P11')"><span class="nav-badge">P11</span> Coalition Amplifier</div>
+        <div class="nav-item" onclick="navigate('P12')"><span class="nav-badge">P12</span> Temporal Lock</div>
+        <div class="nav-item" onclick="navigate('P13')"><span class="nav-badge">P13</span> Civic Guard</div>
+        <div class="nav-item" onclick="navigate('P14')"><span class="nav-badge">P14</span> Proof-of-Offline</div>
+        <div class="nav-item" onclick="navigate('P15')"><span class="nav-badge">P15</span> Quorum Decay</div>
+        <div class="nav-item" onclick="navigate('P16')"><span class="nav-badge">P16</span> Rockefeller Mode</div>
+        <div class="nav-item" onclick="navigate('P17')"><span class="nav-badge">P17</span> SovereigntyShield</div>
+        <div class="nav-item" onclick="navigate('P18')"><span class="nav-badge">P18</span> Conflict-Resolution Core</div>
+      </div>
+    </div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-heading">Closure</div>
+    <div class="nav-item" onclick="navigate('closing')"><span class="nav-badge">Ω</span> Formula · Bootstrap</div>
+  </div>
+</aside>
+
+<main id="main">
+  <div id="view"></div>
+</main>
+</div>
+
+<script>
+/* ═══════════════════════════════════════
+   GITHUB LOADER (silent background layer)
+═══════════════════════════════════════ */
+const GH = {
+  config: null,
+  paths: {
+    'preambule': 'meta/preamble.md',
+    'closing':   'meta/closing.md',
+    'ch1': 'part-i/chapter-01/README.md',
+    'ch2': 'part-i/chapter-02/README.md',
+    'ch3': 'part-i/chapter-03/README.md',
+    'ch4': 'part-ii/chapter-04/README.md',
+    'ch5': 'part-ii/chapter-05/README.md',
+    'ch6': 'part-ii/chapter-06/README.md',
+    'ch7': 'part-iii/chapter-07/README.md',
+    'ch8': 'part-iii/chapter-08/README.md',
+    'ch9': 'part-iii/chapter-09/README.md',
+    'T1':  'part-i/chapter-01/T1-surplus-attention.md',
+    'T2':  'part-i/chapter-01/T2-temporal-barrier.md',
+    'T3':  'part-i/chapter-01/T3-no-correction.md',
+    'T4':  'part-i/chapter-02/T4-responsibility-without-power.md',
+    'T5':  'part-i/chapter-02/T5-neutralization.md',
+    'T6':  'part-i/chapter-02/T6-cognitive-disarmament.md',
+    'T7':  'part-i/chapter-02/T7-necessity-of-form.md',
+    'T8':  'part-i/chapter-03/T8-sovereignty-rupture.md',
+    'T9':  'part-i/chapter-03/T9-system-collapse.md',
+    'T10': 'part-i/chapter-03/T10-constitutional-necessity.md',
+    'T11': 'part-ii/chapter-06/T11-pos-plutocracy.md',
+    'T12': 'part-ii/chapter-06/T12-dao-legitimacy.md',
+    'T13': 'part-ii/chapter-06/T13-fork-legitimacy-paradox.md',
+    'T14': 'part-ii/chapter-06/T14-code-is-law.md',
+    'T15': 'part-ii/chapter-06/T15-sybil-trilemma.md',
+    'T16': 'part-ii/chapter-06/T16-absorption-of-critique.md',
+    'T17': 'part-ii/chapter-06/T17-calibration-filter.md',
+    'P0':  'part-iii/chapter-07/P0-popular-sovereignty.md',
+    'P1':  'part-iii/chapter-07/P1-one-citizen-one-vote.md',
+    'P2':  'part-iii/chapter-07/P2-code-supremacy.md',
+    'P3':  'part-iii/chapter-07/P3-soulbound.md',
+    'P4':  'part-iii/chapter-07/P4-dual-sovereignty.md',
+    'P5':  'part-iii/chapter-07/P5-open-source.md',
+    'P6':  'part-iii/chapter-07/P6-right-to-exit.md',
+    'P7':  'part-iii/chapter-07/P7-core-inviolability.md',
+    'P8':  'part-iii/chapter-08/P8-axiom-break.md',
+    'P9':  'part-iii/chapter-08/P9-convention.md',
+    'P10': 'part-iii/chapter-09/P10-madison-mode.md',
+    'P11': 'part-iii/chapter-09/P11-coalition-amplifier.md',
+    'P12': 'part-iii/chapter-09/P12-temporal-lock.md',
+    'P13': 'part-iii/chapter-09/P13-civic-guard.md',
+    'P14': 'part-iii/chapter-09/P14-proof-of-offline.md',
+    'P15': 'part-iii/chapter-09/P15-quorum-decay.md',
+    'P16': 'part-iii/chapter-09/P16-rockefeller-mode.md',
+    'P17': 'part-iii/chapter-09/P17-sovereignty-shield.md',
+    'P18': 'part-iii/chapter-09/P18-conflict-resolution.md',
+  },
+  rawURL(p){ return `https://raw.githubusercontent.com/${this.config.owner}/${this.config.repo}/${this.config.branch}/${p}`; },
+  cacheKey(p){ return `vb:${this.config.owner}/${this.config.repo}:${p}`; },
+  fromCache(p){ try{ return localStorage.getItem(this.cacheKey(p)); }catch{ return null; } },
+  toCache(p,c){ try{ localStorage.setItem(this.cacheKey(p),c); }catch{} },
+  async fetch(p){
+    const cached = this.fromCache(p);
+    if(cached) return { content: cached, fromCache: true };
+    const res = await fetch(this.rawURL(p));
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+    this.toCache(p, text);
+    return { content: text, fromCache: false };
+  },
+  async loadPage(id){
+    if(!this.config) return null;
+    const path = this.paths[id];
+    if(!path) return null;
+    try{ return { ...(await this.fetch(path)), path }; }
+    catch(e){ return null; }
+  },
+  async testConnection(owner, repo, branch){
+    const res = await fetch(`https://raw.githubusercontent.com/${owner}/${repo}/${branch}/README.md`);
+    if(!res.ok) throw new Error(`Cannot reach ${owner}/${repo} on "${branch}" (HTTP ${res.status})`);
+  },
+  cacheCount(){
+    let n=0;
+    const pre=`vb:${this.config.owner}/${this.config.repo}:`;
+    try{ for(let i=0;i<localStorage.length;i++) if(localStorage.key(i).startsWith(pre)) n++; }catch{}
+    return n;
+  },
+  clearCache(){
+    const keys=[];
+    try{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k&&k.startsWith('vb:')) keys.push(k); } keys.forEach(k=>localStorage.removeItem(k)); }catch{}
+  },
+  loadConfig(){ try{ const s=localStorage.getItem('vb:gh-config'); if(s) this.config=JSON.parse(s); }catch{} },
+  saveConfig(){ try{ localStorage.setItem('vb:gh-config',JSON.stringify(this.config)); }catch{} }
+};
+
+/* ═══════════════════════════════════════
+   MARKDOWN → HTML (from GitHub)
+═══════════════════════════════════════ */
+function parseFrontmatter(raw){
+  const fm={};
+  let body=raw;
+  const m=raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
+  if(m){
+    m[1].split('\n').forEach(line=>{
+      const lm=line.match(/^(\w[\w-]*):\s*(.+)$/);
+      if(lm){
+        let v=lm[2].trim().replace(/^['"]|['"]$/g,'');
+        if(v.startsWith('[')&&v.endsWith(']')) v=v.slice(1,-1).split(',').map(s=>s.trim().replace(/^['"]|['"]$/g,''));
+        fm[lm[1]]=v;
+      }
+    });
+    body=m[2];
+  }
+  return {fm, body};
+}
+
+function processDirectives(text){
+  text=text.replace(/::formula\r?\n([\s\S]*?)::/gm,(_,inner)=>{
+    const lines=inner.trim().split('\n').map(l=>{
+      const e=l.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      return e.replace(/(\/\/.*)/g,'<span style="color:var(--green)">$1</span>');
+    });
+    return `<div class="gh-formula">${lines.join('<br>')}</div>`;
+  });
+  text=text.replace(/::crisis\{([^}]+)\}\r?\n([\s\S]*?)::/gm,(_,id,inner)=>
+    `<div class="crisis-block"><p><strong>${id}</strong> — ${inner.trim()}</p></div>`);
+  text=text.replace(/::callout\{([^}]*)\}\r?\n([\s\S]*?)::/gm,(_,label,inner)=>
+    `<div class="callout callout-gold"><div class="callout-label">${label}</div>${inner.trim()}</div>`);
+  return text;
+}
+
+function renderGitHubContent(result, pageId){
+  const {content, path} = result;
+  const {fm, body} = parseFrontmatter(content);
+
+  let heroHTML = '';
+  if(fm.title||fm.id){
+    const tagClass = fm.type==='theorem'?'tag-theorem':fm.type==='principle'?'tag-principle':fm.type==='axiom'?'tag-axiom':'tag-law';
+    heroHTML = `<div class="gh-hero">
+      <div class="gh-hero-meta">
+        ${fm.id?`<span class="tag ${tagClass}">${fm.id}</span>`:''}
+        ${fm.part?`<span class="tag tag-law">Part ${fm.part}</span>`:''}
+        ${fm.tier?`<span class="tag tag-law">${fm.tier}</span>`:''}
+      </div>
+      <div class="gh-hero-title">${fm.title||''}</div>
+      ${fm.short?`<div class="gh-hero-subtitle">${fm.short}</div>`:''}
+      ${fm.formula?`<div class="formula-box"><span class="f-dim">// Formal notation</span><br><span class="f-val">${fm.formula}</span></div>`:''}
+    </div>`;
+  }
+
+  const processed = processDirectives(body);
+  let mdHTML = typeof marked!=='undefined' ? marked.parse(processed,{breaks:false,gfm:true}) : `<pre>${processed}</pre>`;
+  // Always strip the first <h1> from GitHub markdown — page context is already provided
+  // by either the hero block (for theorems/principles) or the embedded renderer heading
+  mdHTML = mdHTML.replace(/<h1[^>]*>[\s\S]*?<\/h1>\s*/i, '');
+  // Convert any remaining internal .md links to plain text (broken in this interface)
+  mdHTML = mdHTML.replace(/<a\s+href="[^"]*\.md[^"]*">([^<]*)<\/a>/gi, '$1');
+
+  const related = Array.isArray(fm.related)?fm.related:(fm.related?[fm.related]:[]);
+  let relatedHTML = '';
+  if(related.length>0){
+    relatedHTML = `<div class="divider"></div><div class="section-label">Related elements</div><div class="related-grid">${
+      related.map(id=>{
+        const item=DATA.theorems[id]||DATA.principles[id];
+        const isP=!!DATA.principles[id];
+        const lbl=item?item.title:id;
+        return `<div class="related-item" onclick="navigate('${id}')"><div class="ri-id"><span class="tag ${isP?'tag-principle':'tag-theorem'}">${id}</span></div><div class="ri-title">${lbl}</div></div>`;
+      }).join('')
+    }</div>`;
+  }
+
+  return `${heroHTML}<div class="gh-content">${mdHTML}</div>${relatedHTML}${getPageNavArrows(pageId)}`;
+}
+
+/* ═══════════════════════════════════════
+   GITHUB — HARDCODED REPO, NO UI NEEDED
+═══════════════════════════════════════ */
+// Repo is fixed — content loads automatically, no user input required
+
+/* ═══════════════════════════════════════
+   DATA
+═══════════════════════════════════════ */
+const DATA = {
+theorems:{
+  T1:{id:'T1',tag:'theorem',part:'I',ch:'Chapter 1',title:'Surplus Attention',short:'Every interaction produces value for the platform that exceeds what you receive in return.',medium:'This is not a system error — it is its structural norm. The gap between your compensation (convenience, entertainment) and the predictive value accumulated by the platform is the engine of digital capital growth.',formula:'platform_value(τ) > subject_compensation(τ) for all τ',detail:`<p>When you watch a video, like a post, or simply scroll your feed — you are producing data. That data trains a model. The model predicts your next action. The prediction is sold to advertisers.</p><p>You receive content. The platform receives a <em>predictive profile</em>. The value gap is structural, not accidental. This is not the greed of individual managers: it is the mathematics of the system.</p><p>The only way to change this is to introduce an external constraint at the level of constitutional law.</p>`,related:['T2','T3','N1','P4'],resolvedBy:'P4 + P16 (dual sovereignty)'},
+  T2:{id:'T2',tag:'theorem',part:'I',ch:'Chapter 1',title:'Temporal Barrier',short:'A company with 10 years of data holds an advantage that is mathematically impossible to close.',medium:'A new entrant cannot join a homogeneous data market — not because it lacks money, but because it cannot acquire 10 years of user history in any reasonable timeframe. This creates a new kind of natural monopoly.',formula:'∀ newcomer: predictive_advantage(leader) unreachable within reasonable T',detail:`<p>Traditional monopolies can be broken through antitrust law. The temporal barrier is different: a platform that has existed for 15 years knows 15 years of behavior from billions of people. That knowledge cannot be "shared" or "purchased" — it was accumulated over time.</p><p>This means competition in the predictive data space is <em>structurally impossible</em> without external intervention. The market will not correct itself.</p>`,related:['T1','T11','P16'],resolvedBy:'P16 (Rockefeller Mode — concentration limit)'},
+  T3:{id:'T3',tag:'theorem',part:'I',ch:'Chapter 1',title:'No Internal Correction',short:'The system contains no mechanism to reduce the intensity of attention capture.',medium:'As long as the objective function — maximizing engagement — remains unchanged, any internal reform merely changes the form of exploitation, not its substance.',formula:'¬∃ internal_reform: ¬optimize(engagement)',detail:`<p>When a platform introduces "screen time" or a "take a break" button — that is not a system correction. It is a new engagement mechanism.</p><p>This is not developer cynicism — it is a structural constraint. Shareholders demand growth. Growth = engagement. Engagement requires optimization. The circle is closed.</p>`,related:['T5','T10','ΣA18'],resolvedBy:'P2 (code supremacy with NA0)'},
+  T4:{id:'T4',tag:'theorem',part:'I',ch:'Chapter 2',title:'Responsibility Without Power',short:'You bear the consequences of decisions in which you had no part.',medium:'Platform architecture is decided by engineers and managers. You bear the psychological consequences of that architecture. This is not coincidence — it is the structural asymmetry of the digital economy.',formula:'subject bears_consequences(architecture) ∧ subject ¬participated_in(architecture)',detail:`<p>Variable reward schedules — unpredictable reinforcement — are the same mechanism that makes slot machines addictive. They are used in news feeds. This is an engineering decision. You are the object of that decision, not its author.</p><p>FOMO (fear of missing out) is built into the interface deliberately. Social comparison is activated by design. All of this represents architectural choices. Their consequences settle in your mind.</p>`,related:['T5','T6','N2','A9'],resolvedBy:'N2 (right to cognitive autonomy)'},
+  T5:{id:'T5',tag:'theorem',part:'I',ch:'Chapter 2',title:'Neutralization of Individual Resistance',short:'Attempts at "digital detox" are neutralized by the system faster than the subject can adapt.',medium:'Ad blockers → platforms read them and adapt. Account deletion → the algorithm retains a shadow profile. Individual resistance always loses against a system specialized in overcoming it.',formula:'adaptation_rate(system) > adaptation_rate(subject) structurally',detail:`<p>This is not pessimism — it is mathematics. The platform holds data from billions of resistance attempts. Every attempt you make is a training example for the system. You are always teaching it to be better against you.</p><p>Therefore the solution cannot be individual. This follows directly from T5 to T7.</p>`,related:['T6','T7','T10'],resolvedBy:'T7 → T10 → Part III'},
+  T6:{id:'T6',tag:'theorem',part:'I',ch:'Chapter 2',title:'Cognitive Disarmament',short:'Platforms erode precisely the capacities needed to recognize their harm.',medium:'Reflection, concentration, long-term thinking — these are what make you capable of critically evaluating the system. These are precisely the capacities that decline with chronic platform use.',formula:'engagement_hours ↑ → cognitive_capacity ↓ → resistance ↓ → engagement ↑',detail:`<p>Research confirms: more than 3 hours of short-form video per day persistently reduces concentration capacity. The system creates cognitive debt: the more you use the platform, the harder it becomes to understand and exit it.</p>`,related:['T7','N2','P14','A11','A12'],resolvedBy:'P14 (Proof-of-Offline)'},
+  T7:{id:'T7',tag:'theorem',part:'I',ch:'Chapter 2',title:'Necessity of Intersubjective Form',short:'Protection of subjecthood cannot be secured by one person — a form external to the system is required.',medium:'This follows from T4–T6: individual effort is neutralized (T5), cognitive tools are eroded (T6), consequences are borne by the subject without power (T4).',formula:'¬individual_protection → ∃ intersubjective_form with constitutional_status',detail:`<p>Intersubjective form is not simply "joining together". Any informal collective is absorbed by the system through the critique monetization mechanism. What is needed is a form that structurally exists <em>outside</em> the logic of engagement.</p><p>This is the direct transition to T10 and Part III.</p>`,related:['T10','T16','ΣA18'],resolvedBy:'All of Part III'},
+  T8:{id:'T8',tag:'theorem',part:'I',ch:'Chapter 3',title:'Sovereignty Rupture',short:'Your right to form beliefs independently and the platform\'s economic sovereignty are structurally incompatible.',medium:'The platform earns precisely by shaping your beliefs through its ranking algorithm. Your informational sovereignty and its revenue are direct competitors.',formula:'informational_sovereignty(subject) ∩ economic_sovereignty(platform) = ∅',detail:`<p>The ranking algorithm is not a neutral filter. It shows you the reality that maximizes the next interaction. This shapes beliefs. Beliefs shape votes. Votes shape policy.</p><p>This is a direct contradiction of democracy. Constitutional separation (P4) is the only way to resolve it.</p>`,related:['T9','T10','P4','ΣA13','ΣA14'],resolvedBy:'P4 (EQU⊥ ≠ VIC⊥)'},
+  T9:{id:'T9',tag:'theorem',part:'I',ch:'Chapter 3',title:'System Collapse',short:'Without external constraint the system destroys the distinction between information and manipulation.',medium:'The loop (Capture → Predict → Shape → Capture) leads in the long run to an information space entirely managed by predictive models.',formula:'∀t > T_critical: distinction(information, manipulation) → 0',detail:`<p>LLM models optimized for engagement reproduce clickbait as a <em>structural necessity</em>. This is not a deviation — it is the optimal solution to the engagement maximization problem. AI amplification makes this process orders of magnitude faster.</p><p>The point of no return is not a catastrophe, but a quiet normalization: when people stop noticing manipulation because it has become background noise.</p>`,related:['T10','ΣA15','ΣA16','N3'],resolvedBy:'N3 (right to informational diversity)'},
+  T10:{id:'T10',tag:'theorem',part:'I',ch:'Chapter 3',title:'Constitutional Necessity',short:'Method of elimination: everything except a constitutional institution fails.',medium:'Self-regulation excluded (T3). State regulation excluded via conflict of interest. Individual action excluded (T5–T6). Informal collective action excluded (L8). One option remains.',formula:'¬self_regulation ∧ ¬state ∧ ¬individual ∧ ¬informal_collective → constitutional_institution',detail:`<p>This is not inference by analogy — it is a strict proof by elimination. Each alternative is sequentially excluded in previous theorems:</p><ul style="margin:1rem 0 1rem 1.5rem;font-size:0.88rem;color:var(--muted);line-height:1.7"><li>ΣA18: internal reform is impossible without changing the objective function</li><li>ΣA17: the state itself is a buyer of predictions</li><li>T5: individual resistance is neutralized</li><li>L8: critique is monetized and absorbed</li></ul><p>The only object that passes the filter is a <strong>constitutional institution</strong>. This is the direct transition to Parts II and III.</p>`,related:['T17','P0','ch7'],resolvedBy:'All of Part III (P0–P18)'},
+  T11:{id:'T11',tag:'theorem',part:'II',ch:'Chapter 5',title:'PoS Plutocracy',short:'In a "1 token = 1 vote" system the wealthy automatically become wealthier and more influential.',medium:'Staking yields income proportional to capital. Capital grows. Influence grows with it. The Gini coefficient increases monotonically.',formula:'Wealth(t+1) = Wealth(t)·(1+r)^t → Gini(t+1) ≥ Gini(t) always',detail:`<p>This reproduces T1 (surplus attention) on a new substrate: tokens instead of attention, staking instead of engagement. The mathematics is identical.</p><p>The ideology of "decentralization" does not change this mathematics. Blockchain without constitutional architecture reproduces plutocracy in a new package.</p>`,related:['T1','T12','P4','P10'],resolvedBy:'P10 (Madison Mode) + P4 (dual sovereignty)'},
+  T12:{id:'T12',tag:'theorem',part:'II',ch:'Chapter 6',title:'DAO Legitimacy = Circularity',short:'The DAO says: "this is legitimate because the code says so". But who wrote the code?',medium:'DAO legitimacy is grounded in the code, the code is written by developers and early participants — a circle. This is not a democratic mandate.',formula:'Legitimacy(DAO) = Code_says_so ≠ Democratic_mandate',detail:`<p>This is not a theoretical problem — it is practical. In 2016, The DAO was exploited for $60M. This demonstrated: in a crisis, a DAO always falls back on politics. The question is not whether politics will appear — but whether it will be constitutionally formalized.</p>`,related:['T11','T13','T15','P0','P8'],resolvedBy:'P0 (popular sovereignty) + P8 (Axiom-Break)'},
+  T13:{id:'T13',tag:'theorem',part:'II',ch:'Chapter 6',title:'Fork Legitimacy Paradox',short:'Every blockchain fork is a constitutional moment without a constitution — proof that social consensus precedes code.',medium:'When a DAO cannot resolve a conflict through on-chain voting, it defaults to off-chain social consensus: a fork. But this proves the opposite of "code is law": the community, not the code, holds final authority. Every fork is a constitutional crisis resolved by the very political process the system claimed to eliminate.',formula:'Crisis(DAO) → Fork → Social_consensus_prevails → Code_is_not_Law',detail:`<p>The Ethereum/Ethereum Classic split of 2016 is the definitive example. After The DAO hack, the Ethereum Foundation coordinated a hard fork to reverse the theft — an explicit override of immutable code by social consensus.</p><p>This is not a failure of blockchain — it is a revelation of its constitutional structure: there always exists a layer of political authority above the code. The question is not whether this layer exists, but whether it is <em>constitutionally formalized</em>.</p><p>T13 is the direct bridge between T12 (DAO legitimacy is circular) and T14 (code is law without NA0 = exploitation). It demonstrates that "code is law" is not a factual description but an ideological position — one that collapses under pressure and defaults to the exact politics it claimed to transcend.</p>`,related:['T12','T14','P0','P8','P9'],resolvedBy:'P8 (Axiom-Break) + P9 (Convention) — constitutionally formalized political override'},
+  T14:{id:'T14',tag:'theorem',part:'II',ch:'Chapter 6',title:'Code is Law without NA0 = Exploitation',short:'Algorithmic power without constitutional protection of subjecthood is the same arbitrariness, only faceless.',medium:'"Code is law" means: rules execute automatically without discretion. Beneficial for predictability. Harmful when the code is optimized for efficiency rather than subjecthood.',formula:'Optimize(efficiency) ∧ ¬Protect(subjecthood) → Exploitation',detail:`<p>A smart contract does not know context. If the terms state "seize collateral after 1 day of default" — it will seize it, even if the person was in hospital. No appeal. No discretion.</p><p>NA0 (subjecthood as a protected good) must be encoded <em>before</em> any other rules — as an axiom, not as an exception.</p>`,related:['T12','T13','T15','P2','NA0'],resolvedBy:'P2 (NA0 in code as a technical invariant)'},
+  T15:{id:'T15',tag:'theorem',part:'II',ch:'Chapter 6',title:'Sybil Trilemma',short:'You cannot simultaneously have: decentralization + protection from fake accounts + no plutocracy.',medium:'To prove you are a unique human, you need either biometrics (centralization) or a large stake (plutocracy). There is no third option — without constitutional form.',formula:'Decentralization ∧ Sybil_resistance ∧ ¬Plutocracy = ∅',detail:`<p>Worldcoin attempts to solve this via iris scanning — but this creates a massive centralized biometric database. Proof-of-stake solves via capital — but reproduces T11.</p><p>P13 (Civic Guard) resolves the trilemma through a constitutionally legitimate verification form: a randomly selected citizen panel, rotation, on-chain oath.</p>`,related:['T11','T12','P3','P13'],resolvedBy:'P3 (Soulbound) + P13 (Civic Guard)'},
+  T16:{id:'T16',tag:'theorem',part:'II',ch:'Chapter 6',title:'Absorption of Critique',short:'Critique without an institutional alternative becomes part of the system.',medium:'A blockchain critic selling courses about blockchain problems is not resistance. It is the absorption position: extracting capital from diagnosis without producing an alternative.',formula:'Critique ∧ ¬Institutional_alternative → Absorption → Stability↑',detail:`<p>The difference between absorption and resistance is the presence of an institutional alternative. Virtublic is the attempt to move from diagnosis to construction.</p>`,related:['T17','L8','ΣA33'],resolvedBy:'T17 → Part III'},
+  T17:{id:'T17',tag:'theorem',part:'II',ch:'Chapter 6',title:'Calibration Filter: Virtublic',short:'The only object that survives sequential elimination of all alternatives.',medium:'Technology without ideology is the only substrate on which constitutional architecture can be realized without a central trusted agent.',formula:'Virtublic = Blockchain(tech) + Constitution(P0–P18) ∧ ¬Ideology ∧ ¬Absorbed_critique',detail:`<p>This is not a philosophical conclusion — it is a mathematical result. T10 excluded all non-constitutional options. T11–T16 excluded blockchain ideology. What remains is the intersection: blockchain <em>technology</em> + constitutional <em>architecture</em>.</p><p>This is the transition to Part III — not as the next chapter, but as the structural result of the method.</p>`,related:['T10','P0','ch7'],resolvedBy:'All of Part III'}
+},
+principles:{
+  P0:{id:'P0',tier:'core',title:'Popular Sovereignty',short:'Power belongs to citizens — not token holders, not developers, not the state.',detail:`<p>P0 is not merely a declaration. It is an algorithmic filter: every proposed change to the system is checked for compatibility with P0. Formal verification (Coq) automatically blocks incompatible proposals.</p><p>Three excluded claimants to power: (1) Holders — capital does not equal legitimacy (T11). (2) Developers — expertise does not equal mandate (T12). (3) The state — it is simultaneously a regulator and a buyer of predictions.</p>`,formula:'∀ governance_decision: Legitimacy ← Citizens',related:['P1','P7','P18','NA0']},
+  P1:{id:'P1',tier:'core',title:'One Citizen — One Vote in EQU⊥',short:'Political equality is an absolute invariant. 1 citizen = 1 political vote.',detail:`<p>EQU⊥ (the political dimension) is completely separated from VIC⊥ (the economic dimension). A wealthy citizen has one vote on political matters — the same as a poor one.</p><p>Conversion between EQU⊥ and VIC⊥ is constitutionally prohibited. Political influence cannot be "purchased" through economic contribution.</p>`,formula:'EQU⊥(c) = 1 ∀c ∈ Citizens',related:['P4','P10','T11']},
+  P2:{id:'P2',tier:'core',title:'Code Supremacy with NA0',short:'Violation of subjecthood is technically impossible — not merely prohibited.',detail:`<p>This is a fundamental distinction from a simple prohibition: a prohibition can be circumvented, technical impossibility cannot. Formal Verification (Coq) makes NA0 an invariant at the code level.</p><p>SovereigntyShield is the module that automatically blocks any action violating P0–P7. It does not warn, does not log — it <em>blocks technically</em>.</p>`,formula:'SovereigntyShield: violation_impossible ∧ ¬violation_prohibited',related:['P7','T14','NA0']},
+  P3:{id:'P3',tier:'core',title:'Soulbound Identity',short:'You prove that you are a unique human without revealing who exactly.',detail:`<p>zk-SNARK (zero-knowledge proof): a mathematical proof that you are a real and unique human, without transmitting biographical data. The system knows: "this is a unique citizen". It does not know: name, age, address, history.</p><p>This is the resolution of trilemma T15: verification without centralization and without plutocracy.</p>`,formula:'zk-proof(unique_human) ∧ ¬reveal(biographic_data)',related:['P13','T15','T11']},
+  P4:{id:'P4',tier:'core',title:'Dual Sovereignty EQU⊥ / VIC⊥',short:'The political and economic dimensions are completely separated and cannot be converted into each other.',detail:`<p>EQU⊥: political equality — 1 citizen = 1 vote on all governance questions.<br>VIC⊥: economic dimension — proportional to verified contribution.</p><p>Orthogonality: EQU⊥ ∩ VIC⊥ = ∅. Political voice cannot be converted into economic weight and vice versa. This is the direct answer to T11 (PoS plutocracy).</p>`,formula:'EQU⊥(c)=1 ∀c; VIC⊥(c)=f(contribution); EQU⊥ ∩ VIC⊥ = ∅',related:['P1','P10','T8','T11']},
+  P5:{id:'P5',tier:'core',title:'Open Source',short:'All system code is open for verification by any citizen.',detail:`<p>This is not merely transparency — it is a condition of legitimacy. A citizen who cannot verify the code is forced to trust developers. This reproduces the problem of T12.</p><p>Open code + formal verification = public verifiability of constitutional invariants.</p>`,formula:'∀ module ∈ System: source_code = publicly_verifiable',related:['P2','P6','T12']},
+  P6:{id:'P6',tier:'core',title:'Right to Exit',short:'A guaranteed and unconditional exit from the system — without penalties or algorithmic pressure.',detail:`<p>Any citizen may exit the system completely: data is deleted, participation ends, no consequences for civil rights outside the system.</p><p>This is the constitutional response to platform retention mechanisms. Exit must be <em>real</em>, not formal.</p>`,formula:'∀ citizen c: ∃ Exit(c) → ¬Data(c) ∧ ¬Pressure(c)',related:['P5','N5','A2']},
+  P7:{id:'P7',tier:'core',title:'Core Inviolability P0–P7',short:'The core cannot be changed by ordinary procedures — only through the emergency procedure P8.',detail:`<p>P7 protects itself: by including P7 in the core, the system makes it impossible to circumvent this protection through ordinary voting.</p><p>The only change mechanism is P8 (Axiom-Break), which requires extreme conditions and multi-level consensus. P0 is absolutely protected: even P8 cannot change it.</p>`,formula:'Formal_Verification(Coq): ¬∃ action: violates(P0–P7)',related:['P0','P8','P2']},
+  P8:{id:'P8',tier:'emergency',title:'Axiom-Break',short:'The only procedure for changing the core — activated only during a systemic crisis.',detail:`<p>Activation conditions: turnout below 10% for two consecutive cycles <em>and</em> legitimacy below 66% <em>and</em> the concordance rule 75%/75% (both EQU⊥ majority and VIC⊥ majority).</p><p>P0 is absolutely protected: Formal Verification automatically blocks any proposal violating popular sovereignty — even within the Axiom-Break procedure.</p>`,formula:'Activation: (turnout<10%×2) ∧ (legit<66%) ∧ (Concordance≥75%/75%)',related:['P9','P7','P0']},
+  P9:{id:'P9',tier:'emergency',title:'Convention',short:'The constitutional convention — the last resort for revising the entire constitutional architecture.',detail:`<p>Convention is convened during a systemic crisis that cannot be resolved under P8. The dissolution of Convention is determined by Convention itself through qualified majority — after completing its task.</p><p>This is not a revolution. It is a constitutionally formalized mechanism for systemic renewal with clear conditions for activation and completion.</p>`,formula:'Convention_dissolve: self-determined ∧ qualified_majority ∧ task_complete',related:['P8','P0','P7']},
+  P10:{id:'P10',tier:'governance',title:'Madison Mode — Anti-Faction Filter',short:'Quadratic cost of influence: the greater the concentration of votes, the disproportionately more expensive.',detail:`<p>10 votes cost 100 VIC⊥ units. 100 votes cost 10,000. Effective influence = n × √(n_supporters). This mathematically rewards broad coalitions and makes concentrated factions economically unviable.</p><p>A coalition of 1000 participants is 5.6 times more effective than a single "whale" with the same total VIC⊥. This is the direct answer to T12 (governance capture).</p>`,formula:'cost(n)=n²; effective_influence=n×√(n_supporters)',related:['P11','P4','P1','T11','T12']},
+  P11:{id:'P11',tier:'governance',title:'Coalition Amplifier',short:'Broad coalitions receive a governance multiplier: influence grows with the number of co-signers, not just capital.',detail:`<p>P11 is the positive complement to P10. While P10 raises the cost of concentration, P11 rewards breadth: effective_influence = VIC⊥(c) × √(supporters(c)).</p><p>A proposal backed by 1000 citizens each contributing 1 VIC⊥ achieves effective_influence ≈ 31,623 — versus 5,623 for a single actor with the same total capital. The amplifier is uncapped on the coalition side, structurally shifting power toward distributed participation.</p><p>This is the formal operationalization of P0 (popular sovereignty) at the governance level: the system rewards the many over the few not by fiat, but by mathematics.</p>`,formula:'effective_influence(c) = VIC⊥(c) × √(supporters(c))',related:['P10','P12','P4','T11']},
+  P12:{id:'P12',tier:'governance',title:'Temporal Lock — Time-Weighted Commitment',short:'Governance weight increases with duration of participation, preventing flash-governance attacks.',detail:`<p>A rational actor in a liquid system can borrow capital, capture a governance vote, then exit — without any long-term stake in the outcome. P12 closes this attack vector by making governance weight a function of time as well as capital.</p><p>VIC⊥_effective(c, t) = VIC⊥_base(c) × min(log₂(months + 1), lock_cap). A participant of 12 months receives a multiplier of ~3.7×. A flash attacker who enters for one day receives a multiplier of ~0. The cap prevents excessive concentration through time alone.</p><p>P12 is the constitutional answer to governance financialization: participation in the republic is not a commodity that can be rented.</p>`,formula:'VIC⊥_eff(c,t) = VIC⊥(c) × min(log₂(t_months+1), lock_cap)',related:['P10','P11','P15','T11','T12']},
+  P13:{id:'P13',tier:'governance',title:'Civic Guard',short:'A randomly selected panel of citizen auditors for resolving disputed questions.',detail:`<p>21–99 citizens, selected via VRF (verifiable randomness), rotation, on-chain oath, decision by 2/3 qualified majority. This is the constitutionally legitimate means of verifying uniqueness (P3) without biometric centralization.</p><p>Dual Suspicion Protocol: stage 1 — automated behavioral tests; stage 2 — the panel. Resolves trilemma T15.</p>`,formula:'VRF_select(21-99) ∧ 2/3_majority ∧ on-chain_oath',related:['P3','T15','P18']},
+  P14:{id:'P14',tier:'governance',title:'Proof-of-Offline',short:'Citizens prove offline periods via zk-proof and receive a contribution bonus.',detail:`<p>zk-proof: "I did not use digital devices for N hours" — without surveillance, without transmitting data about <em>what</em> you did offline. The system knows only the fact of the offline period, not its content.</p><p>This is the direct and only constitutional response to T6 (cognitive disarmament). Offline time becomes not a loss of participation, but a source of it.</p>`,formula:'zk-proof(offline_period) → cognitive_health_bonus(VIC⊥)',related:['T6','N5','P3']},
+  P15:{id:'P15',tier:'governance',title:'Quorum Decay',short:'The quorum requirement decreases over time, preventing paralysis at low turnout.',detail:`<p>Quorum(t) = Q_initial × e^{−λt}, but with a lower bound Q_min > 0. This prevents two pathological states: (1) paralysis at low turnout; (2) capture by a small group at an excessively low threshold.</p>`,formula:'Quorum(t)=Q_init·e^{−λt}, lim(t→∞)=Q_min>0',related:['P8','P10','P16','P18']},
+  P16:{id:'P16',tier:'governance',title:'Rockefeller Mode — Concentration Ceiling',short:'No single entity may hold more than 5% of EQU⊥ or 15% of VIC⊥ — hard structural caps on accumulation.',detail:`<p>The temporal barrier (T2) demonstrated that data accumulation creates a mathematically uncloseable competitive advantage. P16 is the constitutional answer: accumulation of governance power has a hard ceiling, encoded as a technical invariant rather than a legal rule.</p><p>EQU⊥ cap: 5% of total citizen votes. VIC⊥ cap: 15% of total contribution weight. These are not soft guidelines — SovereigntyShield (P17) technically blocks any action that would cause a single entity to exceed these thresholds, whether through direct acquisition, delegation, or coordinated proxies.</p><p>The name references John D. Rockefeller's Standard Oil — the historical archetype of structural concentration that required external constitutional intervention (antitrust law) to break. P16 makes that intervention automatic and continuous rather than reactive.</p>`,formula:'∀c: EQU⊥(c) ≤ 0.05·ΣEQU⊥; VIC⊥(c) ≤ 0.15·ΣVIC⊥',related:['P10','P11','P17','T2','T11']},
+  P17:{id:'P17',tier:'governance',title:'SovereigntyShield',short:'Any state request for citizen data is a public transaction on the blockchain.',detail:`<p>The state cannot request citizen data secretly: every request automatically creates an on-chain transaction visible to all. The mandate for a request requires 75% EQU⊥ + CivicJuryEngine verification.</p><p>Violation automatically activates P18. This is the direct response to the state as buyer of predictions.</p>`,formula:'∀ state_request → on-chain_transaction; Mandate: 75% EQU⊥',related:['P16','P18','P13','T8','ΣA17']},
+  P18:{id:'P18',tier:'governance',title:'Conflict-Resolution Core',short:'Any constitutional dispute is resolved through the objective structure of invariants, not through an arbitrator\'s choice.',detail:`<p>The system's Res: the outcome of any constitutional dispute is determined by the P0–P18 hierarchy, not by a personal decision of a judge or majority. P18 is the only invariant that survives any circumvention of the system.</p><p>This is analogous to the residue in complex analysis: whatever path a dispute takes through the system, the result is determined only by violations of P0–P7.</p>`,formula:'Res(P18) = a₋₁; conflict(Pi,Pj) → resolve(via P0 hierarchy)',related:['P0','P7','P17','P8']}
+}
+};
+
+/* ═══════════════════════════════════════
+   ROUTER
+═══════════════════════════════════════ */
+let currentPage = 'home';
+let visited = new Set();
+
+async function navigate(page){
+  currentPage = page;
+  visited.add(page);
+  window.scrollTo({top:0,behavior:'instant'});
+  await renderView(page);
+  updateNav(page);
+  updateProgress();
+  if(window.innerWidth<=680) document.getElementById('sidebar').classList.remove('open');
+}
+
+function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); }
+function toggleGroup(id){ const g=document.getElementById(id),b=document.getElementById('btn-'+id); if(g)g.classList.toggle('open'); if(b)b.classList.toggle('open'); }
+
+function updateNav(page){
+  document.querySelectorAll('.nav-item').forEach(el=>{ el.classList.toggle('active', !!(el.getAttribute('onclick')&&el.getAttribute('onclick').includes(`'${page}'`))); });
+  renderBreadcrumb(page);
+  const gmap={ch1:'g1',ch2:'g1',ch3:'g1',T1:'g1t',T2:'g1t',T3:'g1t',T4:'g1t',T5:'g1t',T6:'g1t',T7:'g1t',T8:'g1t',T9:'g1t',T10:'g1t',ch4:'g2',ch5:'g2',ch6:'g2',T11:'g2t',T12:'g2t',T13:'g2t',T14:'g2t',T15:'g2t',T16:'g2t',T17:'g2t',ch7:'g3',ch8:'g3',ch9:'g3',P0:'g3p',P1:'g3p',P2:'g3p',P3:'g3p',P4:'g3p',P5:'g3p',P6:'g3p',P7:'g3p',P8:'g3p',P9:'g3p',P10:'g3p',P11:'g3p',P12:'g3p',P13:'g3p',P14:'g3p',P15:'g3p',P16:'g3p',P17:'g3p',P18:'g3p'};
+  if(gmap[page]){ const g=document.getElementById(gmap[page]),b=document.getElementById('btn-'+gmap[page]); if(g&&!g.classList.contains('open')){ g.classList.add('open'); b&&b.classList.add('open'); } }
+}
+
+function renderBreadcrumb(page){
+  const bc=document.getElementById('breadcrumb');
+  const crumbs=getBreadcrumbs(page);
+  bc.innerHTML=crumbs.map((c,i)=>`<span class="bc-item ${i===crumbs.length-1?'active':''}" onclick="navigate('${c.page}')">${c.label}</span>`+(i<crumbs.length-1?'<span class="bc-arrow"> › </span>':'')).join('');
+}
+function getBreadcrumbs(page){
+  const root=[{label:'VIRTUBLIC',page:'home'}];
+  if(page==='home') return root;
+  if(page==='preambule') return [...root,{label:'Π₀ Preamble',page}];
+  if(page==='closing') return [...root,{label:'Closure',page}];
+  if(page.startsWith('ch')){ const n=parseInt(page.slice(2)),part=n<=3?'I':n<=6?'II':'III'; return [...root,{label:`Part ${part}`,page:`part${part==='I'?'1':part==='II'?'2':'3'}`},{label:`Chapter ${n}`,page}]; }
+  if(DATA.theorems[page]){ const t=DATA.theorems[page],pp=t.part==='I'?'ch1':t.part==='II'?'ch4':'ch7'; return [...root,{label:`Part ${t.part}`,page:pp},{label:page,page}]; }
+  if(DATA.principles[page]) return [...root,{label:'Part III',page:'ch7'},{label:page,page}];
+  return root;
+}
+function updateProgress(){
+  const pct=Math.round((visited.size/30)*100);
+  const arc=document.getElementById('progress-arc'),txt=document.getElementById('progress-pct');
+  if(arc) arc.style.strokeDasharray=`${pct} 100`;
+  if(txt) txt.textContent=pct+'%';
+}
+
+/* ═══════════════════════════════════════
+   VIEW RENDERER
+═══════════════════════════════════════ */
+async function renderView(page){
+  const view = document.getElementById('view');
+
+  if(GH.config && GH.paths[page]){
+    view.innerHTML=`<div class="loading-state"><div class="loading-bar"></div><div class="loading-label" style="opacity:0.4">Loading…</div></div>`;
+    const r = await GH.loadPage(page);
+    if(r){ view.innerHTML=renderGitHubContent(r, page); attachListeners(view); return; }
+  }
+
+  view.innerHTML='';
+  if(page==='home') view.innerHTML=renderHome();
+  else if(page==='preambule') view.innerHTML=renderPreambule();
+  else if(page==='ch1') view.innerHTML=renderCh1();
+  else if(page==='ch2') view.innerHTML=renderCh2();
+  else if(page==='ch3') view.innerHTML=renderCh3();
+  else if(page==='ch4') view.innerHTML=renderCh4();
+  else if(page==='ch5') view.innerHTML=renderCh5();
+  else if(page==='ch6') view.innerHTML=renderCh6();
+  else if(page==='ch7') view.innerHTML=renderCh7();
+  else if(page==='ch8') view.innerHTML=renderCh8();
+  else if(page==='ch9') view.innerHTML=renderCh9();
+  else if(page==='closing') view.innerHTML=renderClosing();
+  else if(DATA.theorems[page]) view.innerHTML=renderTheorem(DATA.theorems[page]);
+  else if(DATA.principles[page]) view.innerHTML=renderPrinciple(DATA.principles[page]);
+  attachListeners(view);
+}
+
+function attachListeners(view){
+  view.querySelectorAll('.expand-header').forEach(h=>h.addEventListener('click',()=>h.closest('.expand-block').classList.toggle('open')));
+  view.querySelectorAll('[data-nav]').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.nav)));
+}
+
+const PAGE_NAV={preambule:{p:'home',pl:'Home',n:'ch1',nl:'Chapter 1'},ch1:{p:'preambule',pl:'Π₀ Preamble',n:'ch2',nl:'Chapter 2'},ch2:{p:'ch1',pl:'Chapter 1',n:'ch3',nl:'Chapter 3'},ch3:{p:'ch2',pl:'Chapter 2',n:'ch4',nl:'Chapter 4'},ch4:{p:'ch3',pl:'Chapter 3',n:'ch5',nl:'Chapter 5'},ch5:{p:'ch4',pl:'Chapter 4',n:'ch6',nl:'Chapter 6'},ch6:{p:'ch5',pl:'Chapter 5',n:'ch7',nl:'Chapter 7'},ch7:{p:'ch6',pl:'Chapter 6',n:'ch8',nl:'Chapter 8'},ch8:{p:'ch7',pl:'Chapter 7',n:'ch9',nl:'Chapter 9'},ch9:{p:'ch8',pl:'Chapter 8',n:'closing',nl:'Closure'},closing:{p:'ch9',pl:'Chapter 9',n:null,nl:''}};
+function getPageNavArrows(page){ const n=PAGE_NAV[page]; if(!n) return ''; return makePageNav(n.p,n.n,n.pl,n.nl); }
+function makePageNav(pp,np,pl,nl){
+  return `<div class="page-nav">
+    ${pp?`<button class="nav-btn nav-btn-prev" onclick="navigate('${pp}')"><span class="nav-dir">← back</span><span class="nav-title">${pl}</span></button>`:'<div></div>'}
+    ${np?`<button class="nav-btn" onclick="navigate('${np}')"><span class="nav-dir">next →</span><span class="nav-title">${nl}</span></button>`:'<div></div>'}
+  </div>`;
+}
+function tCard(id){ const t=DATA.theorems[id]; if(!t)return''; return `<div class="card" onclick="navigate('${id}')"><div class="card-id"><span class="tag tag-theorem">${id}</span></div><h4>${t.title}</h4><p>${t.short}</p><span class="card-arrow">→</span></div>`; }
+function pCard(id){ const p=DATA.principles[id]; if(!p)return''; return `<div class="p-item ${p.tier}" onclick="navigate('${id}')"><div class="p-id">${id}</div><h4>${p.title}</h4><p>${p.short}</p></div>`; }
+
+/* ═══════════════════════════════════════
+   PAGE RENDERERS
+═══════════════════════════════════════ */
+function renderHome(){
+  return `
+  <div class="page-eyebrow">System · Interactive Trilogy</div>
+  <h1 class="page-title">VIRTUBLIC</h1>
+  <p class="page-subtitle">Digital Sovereignty as Constitutional Form</p>
+  <p class="page-lead">Three parts. One logical chain. A single postulate: subjecthood is a politically protected good. Everything else follows structurally.</p>
+  <div class="callout callout-gold"><div class="callout-label">The System's Single Postulate · NA0</div>Subjecthood belongs to the class of politically protected goods. From this — the entire architecture.</div>
+  <div class="divider"></div>
+  <div class="section-label">Three parts of the trilogy</div>
+  <div class="dash-grid">
+    <div class="dash-part" data-num="I" onclick="navigate('ch1')"><div class="dp-label">Part I · Thesis</div><h3>Digital Capital</h3><p>How the attention capture machine works. Ontology without a subject — and why this is a problem.</p><div class="dp-chapters"><span class="dp-chip" onclick="event.stopPropagation();navigate('ch1')">Ch.1 Substrate</span><span class="dp-chip" onclick="event.stopPropagation();navigate('ch2')">Ch.2 Anthropology</span><span class="dp-chip" onclick="event.stopPropagation();navigate('ch3')">Ch.3 Epistemology</span></div></div>
+    <div class="dash-part" data-num="II" onclick="navigate('ch4')"><div class="dp-label">Part II · Antithesis</div><h3>Blockchain without Constitution</h3><p>Why decentralization alone does not solve the problem. The subject within the system — and what to do about it.</p><div class="dp-chapters"><span class="dp-chip" onclick="event.stopPropagation();navigate('ch4')">Ch.4 Ontology</span><span class="dp-chip" onclick="event.stopPropagation();navigate('ch5')">Ch.5 Anthropology</span><span class="dp-chip" onclick="event.stopPropagation();navigate('ch6')">Ch.6 Synthesis</span></div></div>
+    <div class="dash-part" data-num="III" onclick="navigate('ch7')"><div class="dp-label">Part III · Synthesis</div><h3>Constitutional Republic</h3><p>P0–P18: 19 principles that transform blockchain technology into civic architecture.</p><div class="dp-chapters"><span class="dp-chip" onclick="event.stopPropagation();navigate('ch7')">Ch.7 Core P0–P7</span><span class="dp-chip" onclick="event.stopPropagation();navigate('ch8')">Ch.8 P8–P9</span><span class="dp-chip" onclick="event.stopPropagation();navigate('ch9')">Ch.9 P10–P18</span></div></div>
+  </div>
+  <div class="divider"></div>
+  <div class="section-label">Logical chain · from problem to solution</div>
+  <div class="path-nav">
+    <div class="path-step"><div class="path-node" onclick="navigate('preambule')">Π₀<br>Distinction</div><div class="path-arrow">›</div></div>
+    <div class="path-step"><div class="path-node" onclick="navigate('ch1')">T1–T3<br>Ontology</div><div class="path-arrow">›</div></div>
+    <div class="path-step"><div class="path-node" onclick="navigate('ch2')">T4–T7<br>Anthropology</div><div class="path-arrow">›</div></div>
+    <div class="path-step"><div class="path-node" onclick="navigate('T10')">T10<br>Necessity</div><div class="path-arrow">›</div></div>
+    <div class="path-step"><div class="path-node" onclick="navigate('T17')">T17<br>Calibration</div><div class="path-arrow">›</div></div>
+    <div class="path-step"><div class="path-node" onclick="navigate('ch7')">P0–P18<br>Architecture</div><div class="path-arrow">›</div></div>
+    <div class="path-step"><div class="path-node" onclick="navigate('closing')">Ω<br>Closure</div></div>
+  </div>
+  <div class="divider"></div>
+  <div class="section-label">All principles · quick access</div>
+  <div class="principles-row">${['P0','P1','P2','P3','P4','P5','P6','P7'].map(pCard).join('')}</div>
+  <div class="principles-row">${['P8','P9','P10','P11','P12','P13','P14','P15'].map(pCard).join('')}</div>
+  <div class="principles-row">${['P16','P17','P18'].map(pCard).join('')}</div>
+  ${makePageNav(null,'preambule',null,'Π₀ Preamble')}`;
+}
+
+function renderPreambule(){
+  return `
+  <div class="page-eyebrow">Starting point · Π₀</div>
+  <h1 class="page-title">The Primary Distinction</h1>
+  <p class="page-subtitle">The act from which the entire system unfolds</p>
+  <p class="page-lead">Before building a system, one must pose the question it answers. This question cannot be avoided: the very act of avoiding it already answers it.</p>
+  <div class="split-2"><div class="split-cell danger"><div class="split-label">Logic of capital</div><h3>Subject as resource</h3><p>Attention is finite — and precisely therefore valuable. It can be captured, monetized, predicted. The subject is a function that produces data.</p></div><div class="split-cell safe"><div class="split-label">Logic of constitution</div><h3>Subject as sovereign</h3><p>Attention is finite — and precisely therefore requires protection. The subject is not a resource, but a source of legitimacy. The system exists for the subject, not the subject for the system.</p></div></div>
+  <div class="callout callout-gold"><div class="callout-label">Self-evident distinction</div>A neutral position does not exist. Every interaction protocol already applies one of these logics. Reading this text — the system either captures your attention as a resource, or treats it as sovereign.</div>
+  <div class="divider"></div>
+  <div class="section-label">The originating contradiction Ω₀</div>
+  <div class="expand-block"><div class="expand-header"><div class="expand-left"><div class="expand-id">Ω₀</div><div class="expand-title">Attention is finite — the exploitation potential is infinite</div><div class="expand-teaser">This contradiction is self-reproducing.</div></div><div class="expand-toggle">+</div></div><div class="expand-body"><div class="expand-content"><p>A human cannot remain awake for more than ~16 hours per day. This is an absolute physiological limit. Digital capital treats this attention as a potentially infinite resource: there is no internal saturation mechanism, no point at which the system says "enough".</p><p style="margin-top:1rem">This contradiction is self-reproducing: the attempt to deny it already applies one of the two logics to the act of denial.</p><div class="formula-box" style="margin-top:1rem"><span class="f-dim">∀s ∈ S: </span><span class="f-key">F(s)</span> <span class="f-dim">∈ {</span><span class="f-val">Resource(s)</span><span class="f-dim">, </span><span class="f-val">Sovereign(s)</span><span class="f-dim">}</span><br><span class="f-key">Resource(s)</span> <span class="f-dim">∩</span> <span class="f-key">Sovereign(s)</span> <span class="f-dim">= ∅</span></div></div></div></div>
+  <div class="expand-block"><div class="expand-header"><div class="expand-left"><div class="expand-id">NA0 · The single postulate</div><div class="expand-title">Subjecthood is a politically protected good</div><div class="expand-teaser">Everything else follows from this. It is not an axiom about the world — it is a normative choice.</div></div><div class="expand-toggle">+</div></div><div class="expand-body"><div class="expand-content"><p>NA0 is not an empirical observation. It is a normative axiom: a <em>decision</em> that subjecthood must be protected. The entire architecture P0–P18 is derived from this decision.</p><p style="margin-top:1rem">To reject NA0 is to accept that the subject is a resource. To accept NA0 is to accept the necessity of everything that follows from it.</p><div class="callout callout-blue" style="margin-top:1rem"><div class="callout-label">Consequence</div>NA0 is the system's single postulate. All other statements are theorems that follow from NA0 + description of reality.</div></div></div></div>
+  ${makePageNav('home','ch1','Home','Chapter 1 · Attention Substrate')}`;
+}
+
+function renderCh1(){
+  return `
+  <div class="page-eyebrow">Part I · Chapter 1</div>
+  <h1 class="page-title">The Attention Substrate</h1>
+  <p class="page-subtitle">How the capture machine works — at the physics level of the system</p>
+  <p class="page-lead">Before discussing what platforms do to people, we must understand what they do to attention. This is the ontological level: a description of structure without a subject.</p>
+  <div class="callout callout-blue"><div class="callout-label">Level of description</div>This chapter describes a mechanism. Not malicious intent, not specific individuals — but a structure that operates independently of the intentions of its participants.</div>
+  <div class="divider"></div>
+  <div class="section-label">Six axioms of the substrate</div>
+  ${[['A1','Finitude','Waking time is absolutely limited.','This is the only resource in the system with a hard physiological ceiling. ~16 hours per day. It cannot be purchased, it cannot be produced additionally. This limit makes attention valuable — and makes its exploitation structural, not incidental.'],['A2','Non-delegability','Attention cannot be transferred, but it can be alienated.','You cannot delegate the act of perception. But the result of your perception — behavioral data — is converted into platform capital without an equivalent exchange.'],['A3','Quantization','Every interaction is irreversible.','Attention-token τ = (subject, platform, time) — the elementary unit of alienation. Each τ is irreversible: data about your viewing does not disappear when you close the app.'],['A4','Crystallization','Live attention turns into dead data — permanently.','The transition is unidirectional: Subject_time → Capital_data. There is no way back. Your data will not return to you as a subject — it has become part of the model.'],['A5','Aggregation','The value of data grows nonlinearly with scale.','Upon reaching critical mass M_crit, the predictive value of data begins to grow disproportionately. One billion interconnected profiles are worth more than one billion isolated profiles summed.'],['A6','Self-amplification','The cycle is closed and has no saturation point.','Attention → Data → Model → Utility → More attention. This cycle does not stop on its own. It contains no internal saturation mechanism.']].map(([id,name,short,detail])=>`
+  <div class="expand-block"><div class="expand-header"><div class="expand-left"><div class="expand-id"><span class="tag tag-axiom">${id}</span></div><div class="expand-title">${name}</div><div class="expand-teaser">${short}</div></div><div class="expand-toggle">+</div></div><div class="expand-body"><div class="expand-content"><p>${detail}</p></div></div></div>`).join('')}
+  <div class="divider"></div>
+  <div class="section-label">Theorems of this chapter</div>
+  <div class="card-grid">${tCard('T1')}${tCard('T2')}${tCard('T3')}</div>
+  <div class="crisis-block"><p><strong>Δ₁ — First crisis:</strong> T3 implies an agent of consequences. Without its identification the description of the system is incomplete.</p></div>
+  ${makePageNav('preambule','ch2','Π₀ Preamble','Chapter 2 · Platform Anthropology')}`;
+}
+
+function renderCh2(){
+  return `
+  <div class="page-eyebrow">Part I · Chapter 2</div>
+  <h1 class="page-title">Platform Anthropology</h1>
+  <p class="page-subtitle">What the system does to the human — and why they cannot defend themselves alone</p>
+  <p class="page-lead">Chapter 1 described the mechanism. Now — the subject placed within that mechanism. Its cognitive limitations, psychological vulnerabilities, and why individual resistance is structurally doomed.</p>
+  <div class="divider"></div>
+  <div class="section-label">Key theorems</div>
+  <div class="card-grid">${tCard('T4')}${tCard('T5')}${tCard('T6')}${tCard('T7')}</div>
+  <div class="divider"></div>
+  <div class="section-label">Psychotechnological capture mechanisms</div>
+  ${[['Variable Reward Schedule','Unpredictable reinforcement','Your feed does not show good content consistently — it shows it unpredictably. This is exactly what makes slot machines addictive. The same principle is embedded in pull-to-refresh.'],['Social Comparison','Social comparison','Likes, views, followers — numbers constantly visible to the user. They activate social comparison mechanisms that are evolutionarily tuned for continuous attention.'],['FOMO','Fear of missing out','Fear Of Missing Out is built into notifications, badges, and ephemeral content (stories). This is an architectural decision, not a side effect.'],['Infinite Scroll','Infinite feed','Absence of a natural stopping point. A book has an end. A newspaper has an end. The feed does not. This is an engineering choice.']].map(([id,name,desc])=>`
+  <div class="expand-block"><div class="expand-header"><div class="expand-left"><div class="expand-id"><span class="tag tag-law">${id}</span></div><div class="expand-title">${name}</div><div class="expand-teaser">${desc.slice(0,60)}…</div></div><div class="expand-toggle">+</div></div><div class="expand-body"><div class="expand-content"><p>${desc}</p></div></div></div>`).join('')}
+  <div class="callout callout-red" style="margin-top:2rem"><div class="callout-label">Cognitive disarmament · T6</div>The system erodes precisely the capacities — reflection, concentration — needed to comprehend it. This is not a conspiracy: it is the mathematically optimal behavior of a system maximizing engagement.</div>
+  <div class="crisis-block"><p><strong>Δ₂ — Second crisis:</strong> T7 establishes the necessity of intersubjective form. But arbitrary collective action is also marginalized (L8). A specific form with constitutional status is required.</p></div>
+  ${makePageNav('ch1','ch3','Chapter 1','Chapter 3 · Algorithmic Dominion')}`;
+}
+
+function renderCh3(){
+  return `
+  <div class="page-eyebrow">Part I · Chapter 3</div>
+  <h1 class="page-title">Algorithmic Dominion</h1>
+  <p class="page-subtitle">Why neither self-regulation, nor the state, nor the individual can fix the system</p>
+  <p class="page-lead">The synthetic level: we combine ontology (Ch.1) and anthropology (Ch.2) to understand why the system cannot be corrected from within. And what follows from this.</p>
+  <div class="divider"></div>
+  <div class="section-label">Four eliminated options</div>
+  <table class="matrix"><thead><tr><th>Option</th><th>Why it fails</th><th>Theorem</th></tr></thead><tbody><tr><td>Platform self-regulation</td><td>You cannot fix the system without changing its objective function (max engagement)</td><td class="link-cell" onclick="navigate('T3')">T3 + ΣA18</td></tr><tr><td>State regulation</td><td>The state itself is a buyer of predictions and surveillance data</td><td class="link-cell" onclick="navigate('T8')">ΣA17</td></tr><tr><td>Individual resistance</td><td>The system adapts faster than the subject. Ad blockers are bypassed; data is preserved</td><td class="link-cell" onclick="navigate('T5')">T5 + T6</td></tr><tr><td>Informal collective</td><td>Critique is monetized and stabilizes the system. Movements are absorbed through the algorithm</td><td class="link-cell" onclick="navigate('T7')">L8 + T16</td></tr></tbody></table>
+  <div class="divider"></div>
+  <div class="section-label">Rights derived from the analysis · N1–N7</div>
+  ${[['N1','Right to unpredictability','A limit on profiling depth. PI ≤ PI_max as a constitutional ceiling.'],['N2','Right to cognitive autonomy','Protection from architectural belief formation without the subject\'s consent.'],['N3','Right to informational diversity','Algorithmic diversification as a constitutional requirement, not a recommendation.'],['N4','Right of children to development','Prohibition of engagement optimization for developing subjects.'],['N5','Right to offline','Periods outside digital capital as a constitutionally protected state.'],['N6','Right to transparency','Verifiable disclosure of algorithmic objective functions.'],['N7','Right to AI cognitive autonomy','Prohibition of LLM optimization for engagement at the expense of user subjecthood.']].map(([id,name,desc])=>`
+  <div class="expand-block"><div class="expand-header"><div class="expand-left"><div class="expand-id"><span class="tag tag-principle">${id}</span></div><div class="expand-title">${name}</div><div class="expand-teaser">${desc.slice(0,55)}…</div></div><div class="expand-toggle">+</div></div><div class="expand-body"><div class="expand-content"><p>${desc}</p></div></div></div>`).join('')}
+  <div class="divider"></div>
+  <div class="card-grid" style="grid-template-columns:1fr">${tCard('T10')}</div>
+  <div class="callout callout-gold"><div class="callout-label">Transition to Part II</div>T10 established: a constitutional form is needed. But which one? Part II examines blockchain as a possible substrate — and tests whether decentralization alone is sufficient.</div>
+  ${makePageNav('ch2','ch4','Chapter 2','Chapter 4 · Blockchain Ontology')}`;
+}
+
+function renderCh4(){
+  return `
+  <div class="page-eyebrow">Part II · Chapter 4</div>
+  <h1 class="page-title">Blockchain Ontology</h1>
+  <p class="page-subtitle">What blockchain does — and what it does not do by its nature</p>
+  <p class="page-lead">Blockchain is a technology, not an ideology. This is the crucial distinction of Part II. Here — what blockchain <em>technically</em> does, without the weight of promises to "decentralize power".</p>
+  <div class="split-2"><div class="split-cell safe"><div class="split-label">What blockchain does</div><h3>Technical reality</h3><p>Eliminates a single point of control. Makes transactions transparent and irreversible. Enables rules to be codified in smart contracts. Operates without a central trusted agent.</p></div><div class="split-cell danger"><div class="split-label">What blockchain does not do</div><h3>Ideological overreach</h3><p>Does not eliminate inequality (reproduces it via PoS). Does not guarantee democracy (token ≠ citizen vote). Does not protect subjecthood (code is law without NA0 = a new form of arbitrariness).</p></div></div>
+  <div class="divider"></div>
+  <div class="section-label">Six axioms of blockchain</div>
+  ${[['A19','Decentralization','No single point of control.','A distributed ledger technically eliminates a single server. The political significance of this fact requires separate analysis.'],['A20','Consensus','Trust is transferred to the algorithm.','PoW or PoS — trust in a central agent is replaced by trust in the protocol. This does not eliminate trust; it relocates it.'],['A21','Immutability','What is recorded cannot be erased.','A guarantee of reliability — and an instrument for entrenching unjust distributions. Immutability is neutral: it preserves both correct and incorrect records.'],['A22','Tokenization','Any right can be tokenized.','A new dimension of convertibility. And — a new form of concentration: if everything can be tokenized, everything can be purchased.'],['A23','Liquidity','Instant convertibility undermines long-term commitments.','A rational holder sells at the first unfavorable vote. Governance requires long-term participation — liquidity works against this.'],['A24','Programmability','Smart contracts execute without discretion.','This is beneficial for predictability. It is harmful when the code does not contain NA0 as a base invariant.']].map(([id,name,short,detail])=>`
+  <div class="expand-block"><div class="expand-header"><div class="expand-left"><div class="expand-id"><span class="tag tag-axiom">${id}</span></div><div class="expand-title">${name}</div><div class="expand-teaser">${short}</div></div><div class="expand-toggle">+</div></div><div class="expand-body"><div class="expand-content"><p>${detail}</p></div></div></div>`).join('')}
+  <div class="crisis-block"><p><strong>Δ₃:</strong> Blockchain ontology reproduces theorems T1–T3 on a new substrate (tokens instead of attention). The anthropological level is required — who is the subject in this system?</p></div>
+  ${makePageNav('ch3','ch5','Chapter 3','Chapter 5 · Blockchain Anthropology')}`;
+}
+
+function renderCh5(){
+  return `
+  <div class="page-eyebrow">Part II · Chapter 5</div>
+  <h1 class="page-title">Blockchain Anthropology</h1>
+  <p class="page-subtitle">Five positions — none is a genuine political subject</p>
+  <p class="page-lead">Who participates in a blockchain system? What positions are available? And why does none of them constitute a genuine political subject?</p>
+  <div class="divider"></div>
+  <div class="section-label">Five class positions</div>
+  <div class="card-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr))">
+    ${[['Holders','Token holders','Reduced to capital. Influence proportional to stake. 1 token = 1 vote.','tag-theorem'],['Stakers','Stakers','Compound interest without creating new value. Reproduces T1 at the capital level.','tag-theorem'],['Users','Users','Use the infrastructure without participating in governance. External to power.','tag-law'],['Developers','Developers','Real power through code, but without a democratic mandate. T12.','tag-axiom'],['Critics','Critics','Extract capital from diagnosis without an institutional alternative. Absorption → T16.','tag-law']].map(([name,role,desc,cls])=>`<div class="card"><div class="card-id"><span class="tag ${cls}">${name}</span></div><h4>${role}</h4><p>${desc}</p></div>`).join('')}
+  </div>
+  <div class="callout callout-red"><div class="callout-label">Key observation</div>The Critics position is especially instructive: it emerges precisely when systemic diagnosis becomes profitable. But diagnosis without an alternative is absorption, not resistance.</div>
+  <div class="divider"></div>
+  <div class="section-label">The central theorem of this chapter</div>
+  <div class="card-grid" style="grid-template-columns:1fr">${tCard('T11')}</div>
+  <div class="crisis-block"><p><strong>Δ₄:</strong> DAO voting is plutocratic in form. Collective action <em>within</em> blockchain is itself part of the problem it intends to solve.</p></div>
+  ${makePageNav('ch4','ch6','Chapter 4','Chapter 6 · Blockchain + Constitution')}`;
+}
+
+function renderCh6(){
+  return `
+  <div class="page-eyebrow">Part II · Chapter 6</div>
+  <h1 class="page-title">Blockchain + Constitution</h1>
+  <p class="page-subtitle">Synthesis: technology without ideology — a substrate for constitutional architecture</p>
+  <p class="page-lead">After systematically dissecting the problems of blockchain ideology — the conclusion is not "blockchain is useless", but "blockchain <em>technology</em> without blockchain <em>ideology</em>".</p>
+  <div class="divider"></div>
+  <div class="section-label">Theorems leading to T17</div>
+  <div class="card-grid">${tCard('T12')}${tCard('T13')}${tCard('T14')}${tCard('T15')}${tCard('T16')}</div>
+  <div class="divider"></div>
+  <div class="section-label">Calibration filter</div>
+  <div class="card-grid" style="grid-template-columns:1fr">${tCard('T17')}</div>
+  <div class="formula-box"><span class="f-key">VIRTUBLIC</span> <span class="f-dim">=</span><br><span class="f-val">Blockchain</span><span class="f-dim">(technology)</span> <span class="f-dim">+</span> <span class="f-val">Constitution</span><span class="f-dim">(P0–P18)</span><br><span class="f-dim">∧ ¬</span><span>Blockchain</span><span class="f-dim">(ideology)</span> <span class="f-dim">∧ ¬</span><span>Critique</span><span class="f-dim">(absorbed)</span></div>
+  <div class="callout callout-gold"><div class="callout-label">Transition to Part III</div>T17 is not a philosophical conclusion, but a mathematical result of sequential elimination. It points directly to Part III.</div>
+  ${makePageNav('ch5','ch7','Chapter 5','Chapter 7 · Constitutional Core P0–P7')}`;
+}
+
+function renderCh7(){
+  return `
+  <div class="page-eyebrow">Part III · Chapter 7</div>
+  <h1 class="page-title">The Immutable Core</h1>
+  <p class="page-subtitle">P0–P7: foundational principles that cannot be changed by ordinary vote</p>
+  <p class="page-lead">The constitutional core is not merely a declaration of rights. It is algorithmic invariants secured through formal verification: violation is technically impossible.</p>
+  <div class="divider"></div>
+  <div class="section-label">Eight core principles</div>
+  <div class="principles-row">${['P0','P1','P2','P3','P4','P5','P6','P7'].map(pCard).join('')}</div>
+  <div class="divider"></div>
+  <div class="section-label">Key architectural feature</div>
+  <div class="expand-block"><div class="expand-header"><div class="expand-left"><div class="expand-id">SovereigntyShield</div><div class="expand-title">Technical invariant: violation is impossible, not merely prohibited</div><div class="expand-teaser">The difference between "prohibited" and "technically impossible" is fundamental.</div></div><div class="expand-toggle">+</div></div><div class="expand-body"><div class="expand-content"><p>A prohibition can be circumvented: through a legal loophole, by changing the rule, through an exception. Technical impossibility cannot. A Coq invariant is not a rule — it is a mathematical proof.</p><p style="margin-top:1rem">Formal Verification (Coq) is a mathematical proof: the program <em>cannot</em> execute an action that violates P0–P7. Literally: such a state in the system is unreachable.</p><div class="formula-box" style="margin-top:1rem"><span class="f-key">Formal_Verification</span><span class="f-dim">(Coq): </span><span class="f-val">∀ action</span><span class="f-dim">: ¬</span><span class="f-key">violates</span><span class="f-dim">(P0–P7)</span></div></div></div></div>
+  ${makePageNav('ch6','ch8','Chapter 6','Chapter 8 · Emergency Procedures')}`;
+}
+
+function renderCh8(){
+  return `
+  <div class="page-eyebrow">Part III · Chapter 8</div>
+  <h1 class="page-title">Emergency Procedures</h1>
+  <p class="page-subtitle">P8–P9: what happens when the system itself needs to change</p>
+  <p class="page-lead">Even the best constitution must have an update mechanism — otherwise it becomes a prison. P8 and P9 are that mechanism, with the highest possible activation threshold.</p>
+  <div class="divider"></div>
+  <div class="principles-row">${pCard('P8')}${pCard('P9')}</div>
+  <div class="divider"></div>
+  <div class="expand-block"><div class="expand-header"><div class="expand-left"><div class="expand-id">Concordance Rule</div><div class="expand-title">The 75%/75% rule: both dimensions must concur</div><div class="expand-teaser">The economic majority cannot impose a decision on the political — and vice versa.</div></div><div class="expand-toggle">+</div></div><div class="expand-body"><div class="expand-content"><p>Activating P8 requires <em>simultaneously</em>: 75% in EQU⊥ (citizen votes) and 75% in VIC⊥ (contributor votes). Neither dimension can act without the other.</p><div class="formula-box" style="margin-top:1rem"><span class="f-key">P8 activation</span><span class="f-dim">: </span><span class="f-val">(turnout &lt; 10%×2)</span> <span class="f-dim">∧</span> <span class="f-val">(legit &lt; 66% EQU⊥)</span> <span class="f-dim">∧</span> <span class="f-val">(Concordance ≥ 75%/75%)</span></div></div></div></div>
+  <div class="expand-block"><div class="expand-header"><div class="expand-left"><div class="expand-id">P0 — absolute protection</div><div class="expand-title">Popular sovereignty cannot be changed even through P8</div><div class="expand-teaser">The only principle with absolute protection — the source of all legitimacy.</div></div><div class="expand-toggle">+</div></div><div class="expand-body"><div class="expand-content"><p>Formal Verification automatically blocks any proposal within P8 that violates P0. This is not a legal rule — it is a mathematical impossibility.</p><p style="margin-top:1rem">Why is P0 absolutely protected? Because P0 is the source of legitimacy for the entire system, including P8. The system cannot legitimately revoke its own source of legitimacy.</p></div></div></div>
+  ${makePageNav('ch7','ch9','Chapter 7','Chapter 9 · Governance Mechanisms')}`;
+}
+
+function renderCh9(){
+  return `
+  <div class="page-eyebrow">Part III · Chapter 9</div>
+  <h1 class="page-title">Governance Mechanisms</h1>
+  <p class="page-subtitle">P10–P18: how the system governs itself day by day</p>
+  <p class="page-lead">The core (P0–P7) establishes immutable principles. Emergency procedures (P8–P9) are crisis mechanisms. P10–P18 is the operational layer: how decisions are made under normal operating conditions.</p>
+  <div class="divider"></div>
+  <div class="section-label">Governance principles</div>
+  <div class="principles-row">${['P10','P11','P12','P13','P14','P15','P16','P17','P18'].map(pCard).join('')}</div>
+  <div class="divider"></div>
+  <div class="section-label">Matrix: problem → solution</div>
+  <table class="matrix"><thead><tr><th>Problem</th><th>Source</th><th>Constitutional solution</th></tr></thead><tbody><tr><td>Surplus attention</td><td class="link-cell" onclick="navigate('T1')">T1</td><td class="link-cell" onclick="navigate('P4')">P4 + P16</td></tr><tr><td>Temporal barrier</td><td class="link-cell" onclick="navigate('T2')">T2</td><td class="link-cell" onclick="navigate('P16')">P16 (Rockefeller Mode)</td></tr><tr><td>Cognitive disarmament</td><td class="link-cell" onclick="navigate('T6')">T6</td><td class="link-cell" onclick="navigate('P14')">P14 (Proof-of-Offline)</td></tr><tr><td>Sovereignty rupture</td><td class="link-cell" onclick="navigate('T8')">T8</td><td class="link-cell" onclick="navigate('P4')">P4 (EQU⊥ ≠ VIC⊥)</td></tr><tr><td>PoS plutocracy</td><td class="link-cell" onclick="navigate('T11')">T11</td><td class="link-cell" onclick="navigate('P10')">P10 + P11 (Madison + Coalition)</td></tr><tr><td>DAO capture</td><td class="link-cell" onclick="navigate('T12')">T12</td><td class="link-cell" onclick="navigate('P12')">P12 (Temporal Lock)</td></tr><tr><td>Fork without constitution</td><td class="link-cell" onclick="navigate('T13')">T13</td><td class="link-cell" onclick="navigate('P8')">P8 + P9 (Axiom-Break + Convention)</td></tr><tr><td>Sybil trilemma</td><td class="link-cell" onclick="navigate('T15')">T15</td><td class="link-cell" onclick="navigate('P13')">P3 + P13</td></tr><tr><td>State as buyer of data</td><td class="link-cell" onclick="navigate('T8')">ΣA17</td><td class="link-cell" onclick="navigate('P17')">P17 (SovereigntyShield)</td></tr></tbody></table>
+  <div class="divider"></div>
+  <div class="expand-block"><div class="expand-header"><div class="expand-left"><div class="expand-id">Success Multiplier · P11</div><div class="expand-title">Broad coalitions are mathematically more effective than "whales"</div><div class="expand-teaser">effective_influence = n × √(n_supporters)</div></div><div class="expand-toggle">+</div></div><div class="expand-body"><div class="expand-content"><p>A coalition of 1000 participants with 1 VIC⊥ each: effective_influence = 1000 × √1000 ≈ 31,623.<br>A "whale" with 5,623 VIC⊥: effective_influence = 5,623 × √1 = 5,623.<br>The coalition outperforms the whale by 5.62× with less total capital.</p></div></div></div>
+  ${makePageNav('ch8','closing','Chapter 8','System Closure')}`;
+}
+
+function renderClosing(){
+  return `
+  <div class="page-eyebrow">Closure · Ω</div>
+  <h1 class="page-title">The System is Closed</h1>
+  <p class="page-subtitle">Pᵣ ↔ Pᵣ⁻¹ · Δ(Π₀, Πmeta) = 0</p>
+  <p class="page-lead">Three parts have completed the full journey: from problem to solution, from distinction to constitution. The method is isomorphic to the content.</p>
+  <div class="formula-box"><span class="f-dim">// Closure formula</span><br><span class="f-key">VIRTUBLIC</span> <span class="f-dim">=</span> <span class="f-val">Blockchain</span><span class="f-dim">(tech)</span> <span class="f-dim">+</span> <span class="f-val">Constitution</span><span class="f-dim">(P0–P18)</span><br><span class="f-dim">         ∧ ¬</span><span class="f-val">Blockchain</span><span class="f-dim">(ideology)</span> <span class="f-dim">∧ ¬</span><span class="f-val">Critique</span><span class="f-dim">(absorbed)</span><br><br><span class="f-dim">// Isomorphism</span><br><span class="f-key">Π₀</span> <span class="f-dim">(distinction: resource / sovereign)</span><br><span class="f-dim">    ↕ trajectory of three parts</span><br><span class="f-key">Πmeta</span> <span class="f-dim">(P0–P18 = realized popular sovereignty)</span><br><br><span class="f-key">Δ</span><span class="f-dim">(Π₀, Πmeta)</span> <span class="f-dim">= 0</span> <span class="f-comment">// system closed</span></div>
+  <div class="divider"></div>
+  <div class="section-label">Unclosed element · Bootstrap Paradox</div>
+  <div class="callout callout-red"><div class="callout-label">⚠ Δ_bootstrap ≠ 0 — pending</div>The threshold of 1000 citizens for system genesis is an empirical parameter, not a structurally derived invariant. The Virtublian party as temporary custodian reproduces at the meta-level the same problem T12 that it diagnoses at the object level.</div>
+  <div class="expand-block"><div class="expand-header"><div class="expand-left"><div class="expand-id">Bootstrap Paradox</div><div class="expand-title">How to create a constitution without a constitution?</div><div class="expand-teaser">The classical problem of constitutional genesis — formalized here.</div></div><div class="expand-toggle">+</div></div><div class="expand-body"><div class="expand-content"><p>Every constitution is created before the constitutional process became possible. This is not a unique problem of Virtublic — it is the universal problem of any constitutional act.</p><p style="margin-top:1rem">Full closure of Δ_bootstrap is a constitutional act, not a theoretical development.</p><div class="formula-box" style="margin-top:1rem"><span class="f-key">Δ_bootstrap</span> <span class="f-dim">≠ 0  ↔  Virtublic is becoming</span><br><span class="f-key">Δ_bootstrap</span> <span class="f-dim">= 0  ↔  Digital Census v2 launched ∧ governance transfer on-chain</span></div></div></div></div>
+  <div class="callout callout-gold" style="margin-top:2rem"><div class="callout-label">Meta-level</div>The trilogy is self-describing: its method is isomorphic to its content. Virtublic as constitutional architecture is not the object of the trilogy's description — it is the structural result of its method.</div>
+  ${makePageNav('ch9',null,'Chapter 9',null)}`;
+}
+
+function renderTheorem(t){
+  return `
+  <div class="detail-hero">
+    <div class="detail-meta"><span class="tag tag-theorem">${t.id}</span><span class="tag tag-law">Part ${t.part}</span><span class="tag tag-law">${t.ch}</span></div>
+    <div class="detail-title">${t.title}</div>
+    <div class="detail-subtitle">${t.short}</div>
+    <div class="detail-abstract">${t.medium}</div>
+  </div>
+  ${t.formula?`<div class="formula-box"><span class="f-dim">// Formal notation</span><br><span class="f-val">${t.formula}</span></div>`:''}
+  <div class="section-label" style="margin-top:2rem">Detailed explanation</div>
+  <div style="font-size:0.95rem;line-height:1.75;color:rgba(232,226,212,0.8)">${t.detail}</div>
+  ${t.resolvedBy?`<div class="callout callout-green" style="margin-top:2rem"><div class="callout-label">Constitutional resolution</div>${t.resolvedBy}</div>`:''}
+  <div class="divider"></div>
+  <div class="section-label">Related elements</div>
+  <div class="related-grid">${(t.related||[]).map(id=>{const item=DATA.theorems[id]||DATA.principles[id];if(!item)return'';const isP=!!DATA.principles[id];return`<div class="related-item" onclick="navigate('${id}')"><div class="ri-id"><span class="tag ${isP?'tag-principle':'tag-theorem'}">${id}</span></div><div class="ri-title">${item.title}</div></div>`;}).join('')}</div>
+  ${makePageNav(null,'closing',null,'Closure')}`;
+}
+
+function renderPrinciple(p){
+  const tl={core:'Immutable Core',emergency:'Emergency Procedure',governance:'Governance Mechanism'};
+  const tt={core:'tag-theorem',emergency:'tag-crisis',governance:'tag-axiom'};
+  return `
+  <div class="detail-hero">
+    <div class="detail-meta"><span class="tag tag-principle">${p.id}</span><span class="tag ${tt[p.tier]}">${tl[p.tier]}</span></div>
+    <div class="detail-title">${p.title}</div>
+    <div class="detail-subtitle">${p.short}</div>
+  </div>
+  ${p.formula?`<div class="formula-box"><span class="f-dim">// Formal notation</span><br><span class="f-val">${p.formula}</span></div>`:''}
+  <div class="section-label" style="margin-top:2rem">Detailed description</div>
+  <div style="font-size:0.95rem;line-height:1.75;color:rgba(232,226,212,0.8)">${p.detail}</div>
+  <div class="divider"></div>
+  <div class="section-label">Related elements</div>
+  <div class="related-grid">${(p.related||[]).map(id=>{const item=DATA.theorems[id]||DATA.principles[id];if(!item)return'';const isP=!!DATA.principles[id];return`<div class="related-item" onclick="navigate('${id}')"><div class="ri-id"><span class="tag ${isP?'tag-principle':'tag-theorem'}">${id}</span></div><div class="ri-title">${item.title}</div></div>`;}).join('')}</div>
+  ${makePageNav('ch7','closing','Back to Chapter 7','Closure')}`;
+}
+
+/* ═══════════════════════════════════════
+   INIT
+═══════════════════════════════════════ */
+window.addEventListener('DOMContentLoaded', ()=>{
+  // Repo is hardcoded — content loads automatically from GitHub
+  GH.config = { owner: 'Virtublican', repo: 'Virtublic_Theory', branch: 'main' };
+  navigate('home');
+  window.addEventListener('hashchange', ()=>{ const p=window.location.hash.slice(1); if(p) navigate(p); });
+});
+
+window.navigate=navigate;
+window.toggleGroup=toggleGroup;
+window.toggleSidebar=toggleSidebar;
+</script>
+</body>
+</html>
