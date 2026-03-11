@@ -1,11 +1,11 @@
 ---
 page: chapter
-title: The Attention Substrate a
-subtitle: "How the capture machine works — at the physics level of the system"
+title: The Attention Substrate
+subtitle: "How the capture machine works — at the physics level of the system "
 eyebrow: "Part I · Chapter 1"
 ---
 
-# The Attention Substrate
+# The Attention Substrate 1
 
 _How the capture machine works — at the physics level of the system_
 
