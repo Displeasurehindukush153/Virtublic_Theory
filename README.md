@@ -76,42 +76,6 @@ Each transition between parts is formalised as a **constitutional crisis (Δ)** 
 Everything derived within this system is **considered true until proven otherwise.** The matrix is an open invitation to falsification.
 
 ---
-
-## Structural Dependency Map
-
-The following graph declares the primary inferential edges of the system. These are structural derivation relationships, not summaries.
-
-```
-NA0
- └─→ A1–A18 (digital capital axioms)
-       └─→ T1–T3  (surplus attention · temporal barrier · no correction)
-       └─→ T4–T7  (responsibility without power · neutralisation · cognitive disarmament · necessity of form)
-       └─→ T8–T10 (sovereignty rupture · system collapse · constitutional necessity)
-             └─→ Δ₁–Δ₂ (no agent of consequences) ──→ compels Part II
-
- └─→ A19–A36 (blockchain axioms)
-       └─→ T11–T16 (PoS plutocracy · DAO legitimacy · fork paradox · code-is-law · Sybil trilemma · absorption of critique)
-       └─→ T17 (calibration filter: selects blockchain as substrate; excludes blockchain ideology)
-             └─→ Δ₃–Δ₄ (collective reproduces plutocracy) ──→ compels Part III
-
-T10 + T17
- └─→ Part III: constitutional necessity is derived, not stipulated
-       └─→ P0–P7  (Immutable Core)
-             └─→ P0: Formal Verification in Coq blocks any violating proposal
-             └─→ P4: EQU⊥ ⊥ VIC⊥ · conversion prohibited constitutionally
-       └─→ P8–P9  (Emergency Procedures) · Concordance Rule: supermajority of EQU⊥ ∧ VIC⊥
-       └─→ P10–P18 (Governance Mechanisms)
-             └─→ T15 (Sybil trilemma)        ──→ resolved by P3 + P13
-             └─→ T6  (cognitive disarmament)  ──→ resolved by P14 (Proof-of-Offline)
-             └─→ T11 (PoS plutocracy)         ──→ resolved by P10 (Madison Mode · quadratic cost)
-
-System closure condition:
-  Δ(Π₀, Πmeta) = 0  ←→  VIRTUBLIC = Blockchain(technology) + Constitution(P0–P18)
-                                      ∧ ¬Blockchain(ideology) ∧ ¬Critique(absorbed)
-```
-
----
-
 ## The Matrix as an Analytical Instrument
 
 The matrix functions as a **complete map of digital power and digital capital.** It covers three dimensions simultaneously: the mechanisms of attention exploitation on digital platforms, the structural pathologies of blockchain governance systems, and the constitutional instruments capable of protecting subjecthood.
