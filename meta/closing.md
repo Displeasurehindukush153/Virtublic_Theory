@@ -32,12 +32,27 @@ Its method is isomorphic to its content. The subject/object distinction unfolds 
 Virtublic as constitutional architecture is not the _object_ of the trilogy's description — it is the **structural result** of its method.
 
 ## Unclosed element — Bootstrap Paradox
+The sole unclosed element of the system is not a threshold of initial
+participants, but the conditions under which the Virtublican Party
+transfers genesis governance parameters to citizen governance. The
+Party as temporary custodian reproduces at the meta-level the same
+problem (T12) it diagnoses at the object level — a privileged actor
+whose position is not yet fully governed by the constitutional
+invariants it is building.
 
-The threshold of 1000 citizens for system genesis is an empirical parameter, not a structurally derived invariant. The Virtublian party as temporary custodian reproduces at the meta-level the same problem T12 that it diagnoses at the object level.
-
+The transfer is automatic and unconditional: upon reaching the defined
+threshold of verified citizens, genesis governance parameters pass to
+citizen governance via smart contract. The Party retains no special
+protocol rights unavailable to any other verified citizen after that
+point. The threshold itself is an operational parameter of
+constitutional design — the point at which statistical Sybil
+resistance under P13 becomes structurally reliable — not a condition
+of the system's existence or legitimacy.
 ::formula
-Δ_bootstrap ≠ 0  ↔  Virtublic is becoming
-Δ_bootstrap = 0  ↔  Digital Census v2 launched ∧ governance transfer on-chain
+Δ_bootstrap ≠ 0  ↔  Virtublic in constitutional formation;
+                     Party operates as temporary custodian
+Δ_bootstrap = 0  ↔  Transfer conditions on-chain ∧
+                     no_privileged_actor verified ∧
+                     governance irrevocably with citizens
 ::
-
 **Full closure of Δ_bootstrap is a constitutional act, not a theoretical development.**
