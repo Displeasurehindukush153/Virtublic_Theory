@@ -202,11 +202,31 @@ VIRTUBLIC = Blockchain(technology) + Constitution(P0–P18)
 Δ(Π₀, Πmeta) = 0  ←→  system is closed
 ```
 
-The **single unclosed element** of the system is made explicit: the threshold of 1,000 citizens for system genesis is an empirical parameter, not a structurally derived invariant. The Virtublian party as temporary custodian reproduces at the meta-level the same problem (T12) it diagnoses at the object level. This is not a theoretical gap to be resolved within the matrix — it is a constitutional act.
+The **single unclosed element** of the system is made explicit: not 
+a threshold of initial participants, but the conditions under which 
+the Virtublican Party transfers genesis governance parameters to 
+citizen governance. The Party as temporary custodian reproduces at 
+the meta-level the same problem (T12) it diagnoses at the object 
+level. This is not a theoretical gap to be resolved within the 
+matrix — it is a constitutional act: the explicit, irrevocable, 
+on-chain formalisation of the moment at which custodianship ends 
+and sovereignty begins.
+
+The transfer is automatic and unconditional: upon reaching the 
+defined threshold of verified citizens, genesis governance parameters 
+pass to citizen governance via smart contract. The Party retains no 
+special protocol rights unavailable to any other verified citizen 
+after that point. The threshold itself is an operational parameter 
+of constitutional design — the point at which statistical Sybil 
+resistance (P13) becomes structurally reliable — not a condition 
+of the system's existence or legitimacy.
 
 ```
-Δ_bootstrap ≠ 0  ↔  Virtublic is in constitutional formation
-Δ_bootstrap = 0  ↔  Digital Census v2 launched ∧ governance transfer conditions on-chain
+Δ_bootstrap ≠ 0  ↔  Virtublic in constitutional formation;
+Party operates as temporary custodian
+Δ_bootstrap = 0  ↔  Transfer conditions on-chain ∧
+no_privileged_actor verified ∧
+governance irrevocably with citizens
 ```
 
 ---
